@@ -36,16 +36,6 @@ services:
     networks:
       - pg-network
 
-  ollama:
-    image: ollama/ollama:latest
-    gpus: all
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    networks:
-      - pg-network
-
   mailpit:
     image: axllent/mailpit:latest
     ports:
@@ -69,4 +59,3 @@ networks:
 
 volumes:
   pg-data:
-  ollama_data:
