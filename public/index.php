@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__) . '/src/controllers/DefaultController.php';
-require_once dirname(__DIR__) . '/src/controllers/ProjectController.php';
-require_once dirname(__DIR__) . '/Routing.php';
+use App\Routing;
+use App\Controller\DefaultController;
+use App\Controller\ProjectController;
+
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 $routing = new Routing();
 
-// TU BĘDZIEMY DEFINIOWAĆ WSZYSTKIE TRASY WYSTĘPUJĄCE W NASZYM PROJEKCIE
 $routing->get('/projects', ProjectController::class, 'index');
 $routing->get('/projects/{id}', ProjectController::class, 'show');
 $routing->get('/', DefaultController::class, 'index');
