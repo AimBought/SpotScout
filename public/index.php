@@ -2,17 +2,22 @@
 
 declare(strict_types=1);
 
-use App\Routing;
 use App\Controller\DefaultController;
-use App\Controller\ProjectController;
+use App\Controller\SecurityController;
+use App\Controller\SpotController;
+use App\Routing;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 $routing = new Routing();
 
-$routing->get('/projects', ProjectController::class, 'index');
-$routing->get('/projects/{id}', ProjectController::class, 'show');
 $routing->get('/', DefaultController::class, 'index');
+$routing->get('/login', SecurityController::class, 'login');
+$routing->get('/register', SecurityController::class, 'register');
+$routing->get('/explore', SpotController::class, 'explore');
+$routing->get('/spot/add', SpotController::class, 'add');
+$routing->get('/spot/details/{id}', SpotController::class, 'details');
+$routing->get('/profile', SpotController::class, 'profile');
 
 $routeFound = $routing->dispatch(
     $_SERVER['REQUEST_METHOD'],
