@@ -4,115 +4,152 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <header>
-        <div>
-            <a href="/"><strong>SpotScout</strong></a>
-        </div>
+    <header class="site-header">
+        <div class="page header-inner">
+            <a href="/" class="brand-logo">
+                SpotScout <span class="brand-dot" aria-hidden="true"></span>
+            </a>
 
-        <form action="/explore" method="get" role="search">
-            <label for="search-spots">Search spots</label>
-            <input
-                type="search"
-                id="search-spots"
-                name="q"
-                placeholder="Search spots, cities, tags..."
-            >
-            <button type="submit">Search</button>
-        </form>
+            <form action="/explore" method="get" role="search" class="search-form">
+                <label for="search-spots" class="sr-only">Search spots</label>
+                <input
+                    type="search"
+                    id="search-spots"
+                    name="q"
+                    class="search-input"
+                    placeholder="Search spots, coordinates, tags..."
+                >
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
 
-        <nav aria-label="Main navigation">
-            <ul>
-                <li><a href="/">Welcome</a></li>
-                <li><a href="/explore" aria-current="page">Explore Feed</a></li>
-                <li><a href="/spot/add">+ New Spot</a></li>
-                <li><a href="/profile">@adam_k</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <main>
-        <aside aria-label="Categories filter">
-            <h2>Categories</h2>
-            <nav aria-label="Spot categories">
-                <ul>
-                    <?php foreach ($categories as $category): ?>
-                        <li>
-                            <a href="/explore?category=<?= urlencode($category['name']) ?>">
-                                <?= htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8') ?>
-                                (<?= (int) $category['count'] ?>)
-                            </a>
-                        </li>
-                    <?php endforeach; ?>
+            <nav class="desktop-nav" aria-label="Main navigation">
+                <ul class="nav-list">
+                    <li><a href="/">Welcome</a></li>
+                    <li><a href="/explore" aria-current="page" class="active-link">Explore</a></li>
+                    <li><a href="/spot/add" class="btn btn-primary">+ New Spot</a></li>
+                    <li><a href="/profile" class="profile-pill">@adam_k</a></li>
                 </ul>
             </nav>
+        </div>
+    </header>
+
+    <main class="page explore-layout">
+        <aside class="sidebar-panel" aria-label="Categories filter">
+            <div class="sidebar-block">
+                <span class="eyebrow-label">SPOTSCOUT STUDIO</span>
+                <h2 class="sidebar-title">Categories</h2>
+                <nav aria-label="Spot categories">
+                    <ul class="category-list">
+                        <?php foreach ($categories as $index => $category): ?>
+                            <li>
+                                <a
+                                    href="/explore?category=<?= urlencode($category['name']) ?>"
+                                    class="category-pill <?= $index === 0 ? 'is-active' : '' ?>"
+                                >
+                                    <span><?= htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8') ?></span>
+                                    <span class="category-count"><?= (int) $category['count'] ?></span>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </nav>
+            </div>
         </aside>
 
-        <section aria-labelledby="explore-heading">
-            <header>
-                <h1 id="explore-heading">Explore Spots (<?= (int) $totalSpots ?>)</h1>
-                <p>Discover unique and verified locations for photo shoots, video production, and sightseeing.</p>
-                <div aria-label="Sort options">
-                    <span>Sort by:</span>
-                    <a href="/explore?sort=trending">Trending</a> |
-                    <a href="/explore?sort=distance">Distance</a> |
-                    <a href="/explore?sort=rating">Top Rated</a>
+        <section class="feed-column" aria-labelledby="explore-heading">
+            <header class="feed-header">
+                <div>
+                    <h1 id="explore-heading">Active Production Spots</h1>
+                    <p class="text-muted">
+                        Scouted viewpoints with verified coordinates, lighting hours, and drone rules (<?= (int) $totalSpots ?> total).
+                    </p>
+                </div>
+                <div class="sort-bar" aria-label="Sort options">
+                    <span class="text-muted">Sort:</span>
+                    <a href="/explore?sort=trending" class="sort-link is-active">Trending</a>
+                    <a href="/explore?sort=distance" class="sort-link">Distance</a>
+                    <a href="/explore?sort=rating" class="sort-link">Top Rated</a>
                 </div>
             </header>
 
-            <section aria-labelledby="map-preview-heading">
-                <h2 id="map-preview-heading">Interactive Map Preview</h2>
-                <p>Nearby pins on map:</p>
-                <ul>
+            <section class="radar-card" aria-labelledby="map-preview-heading">
+                <div class="radar-top">
+                    <div>
+                        <span class="radar-status">● RADAR • LIVE OPTIC MAP</span>
+                        <h2 id="map-preview-heading" class="radar-title">Nearby Scouted Pins</h2>
+                    </div>
+                    <button type="button" class="btn btn-outline">Expand Map View</button>
+                </div>
+                <ul class="tag-list">
                     <?php foreach ($nearbyMapPins as $pin): ?>
-                        <li>
+                        <li class="pin-chip">
+                            <span class="pin-dot" aria-hidden="true"></span>
                             <strong><?= htmlspecialchars($pin['name'], ENT_QUOTES, 'UTF-8') ?></strong>
-                            (<?= htmlspecialchars($pin['distance'], ENT_QUOTES, 'UTF-8') ?>)
+                            <span class="text-muted"><?= htmlspecialchars($pin['distance'], ENT_QUOTES, 'UTF-8') ?></span>
                         </li>
                     <?php endforeach; ?>
                 </ul>
-                <button type="button">Expand Map View</button>
             </section>
 
-            <section aria-label="Spots feed">
+            <section class="spots-grid" aria-label="Spots feed">
                 <?php foreach ($spots as $spot): ?>
-                    <article>
-                        <header>
-                            <ul aria-label="Spot tags">
+                    <article class="spot-card">
+                        <div class="spot-card-visual">
+                            <ul class="tag-list" aria-label="Spot tags">
                                 <?php foreach ($spot['badges'] as $badge): ?>
-                                    <li><?= htmlspecialchars($badge, ENT_QUOTES, 'UTF-8') ?></li>
+                                    <li class="badge"><?= htmlspecialchars($badge, ENT_QUOTES, 'UTF-8') ?></li>
                                 <?php endforeach; ?>
                             </ul>
 
-                            <h2>
-                                <a href="/spot/details/<?= (int) $spot['id'] ?>">
-                                    <?= htmlspecialchars($spot['name'], ENT_QUOTES, 'UTF-8') ?>
-                                </a>
-                            </h2>
+                            <div class="visual-bottom">
+                                <span class="photo-author">Photo: <?= htmlspecialchars($spot['author'], ENT_QUOTES, 'UTF-8') ?></span>
+                                <span class="saves-pill">♥ <?= (int) $spot['saves'] ?></span>
+                            </div>
+                        </div>
 
-                            <p>
-                                <span><?= htmlspecialchars($spot['location'], ENT_QUOTES, 'UTF-8') ?></span>
-                                • <span><?= htmlspecialchars($spot['distance'], ENT_QUOTES, 'UTF-8') ?></span>
-                                • <span>Photo: <?= htmlspecialchars($spot['author'], ENT_QUOTES, 'UTF-8') ?></span>
+                        <div class="spot-card-body">
+                            <div class="spot-card-title-row">
+                                <h2>
+                                    <a href="/spot/details/<?= (int) $spot['id'] ?>" class="spot-title-link">
+                                        <?= htmlspecialchars($spot['name'], ENT_QUOTES, 'UTF-8') ?>
+                                    </a>
+                                </h2>
+                                <span class="rating-badge">
+                                    ★ <?= htmlspecialchars((string) $spot['rating'], ENT_QUOTES, 'UTF-8') ?>
+                                    <small class="text-muted">(<?= (int) $spot['reviewsCount'] ?>)</small>
+                                </span>
+                            </div>
+
+                            <p class="spot-meta">
+                                📍 <?= htmlspecialchars($spot['location'], ENT_QUOTES, 'UTF-8') ?>
+                                • <?= htmlspecialchars($spot['distance'], ENT_QUOTES, 'UTF-8') ?>
                             </p>
-                        </header>
 
-                        <p><?= htmlspecialchars($spot['description'], ENT_QUOTES, 'UTF-8') ?></p>
+                            <p class="spot-description">
+                                <?= htmlspecialchars($spot['description'], ENT_QUOTES, 'UTF-8') ?>
+                            </p>
 
-                        <footer>
-                            <span>★ <?= htmlspecialchars((string) $spot['rating'], ENT_QUOTES, 'UTF-8') ?> (<?= (int) $spot['reviewsCount'] ?>)</span>
-                            • <span>♥ <?= (int) $spot['saves'] ?> saves</span>
-                            • <a href="/spot/details/<?= (int) $spot['id'] ?>">View Spot Details →</a>
-                        </footer>
+                            <footer class="spot-card-footer">
+                                <span class="light-tag">☀️ <?= htmlspecialchars($spot['bestLight'], ENT_QUOTES, 'UTF-8') ?></span>
+                                <a href="/spot/details/<?= (int) $spot['id'] ?>" class="details-link">View Spot →</a>
+                            </footer>
+                        </div>
                     </article>
-                    <hr>
                 <?php endforeach; ?>
             </section>
         </section>
     </main>
 
-    <footer>
+    <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+        <a href="/explore" class="mobile-nav-item is-active">Explore</a>
+        <a href="/spot/add" class="mobile-nav-item mobile-nav-add">+ Add</a>
+        <a href="/profile" class="mobile-nav-item">Profile</a>
+    </nav>
+
+    <footer class="page site-footer">
         <p>&copy; 2026 SpotScout. Community platform for photographers, filmmakers, and explorers.</p>
     </footer>
 </body>
