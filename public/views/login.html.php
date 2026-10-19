@@ -4,64 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <header>
-        <a href="/"><strong>SpotScout</strong></a>
-        <nav aria-label="Auth navigation">
-            <ul>
-                <li><a href="/explore">Explore Feed</a></li>
-                <li><a href="/register">Sign Up</a></li>
-            </ul>
-        </nav>
+    <header class="site-header">
+        <div class="page header-inner">
+            <a href="/" class="brand-logo">
+                SpotScout <span class="brand-dot" aria-hidden="true"></span>
+            </a>
+            <nav aria-label="Auth navigation">
+                <ul class="nav-list">
+                    <li><a href="/explore">Explore</a></li>
+                    <li><a href="/register" class="btn btn-outline">Sign Up</a></li>
+                </ul>
+            </nav>
+        </div>
     </header>
 
-    <main>
-        <section aria-labelledby="login-heading">
-            <h1 id="login-heading">Welcome Back</h1>
-            <p>Sign in to access your saved spots, location coordinates, and scouting notes.</p>
+    <main class="page auth-wrapper">
+        <section class="auth-card" aria-labelledby="login-heading">
+            <header class="auth-header">
+                <h1 id="login-heading">Welcome Back</h1>
+                <p class="text-muted">Sign in to access your saved spots, coordinates, and scouting notes.</p>
+            </header>
 
-            <form action="/login" method="post">
-                <div>
-                    <label for="email">Username or E-mail</label>
+            <form action="/login" method="post" class="form-stack">
+                <div class="form-group">
+                    <div class="form-label-row">
+                        <label for="email">Username or E-mail</label>
+                        <span class="form-hint">Scout ID</span>
+                    </div>
                     <input
                         type="text"
                         id="email"
                         name="email"
+                        class="form-input"
                         placeholder="e.g. pilot@spotscout.io"
                         required
                     >
                 </div>
 
-                <div>
-                    <label for="password">Password</label>
+                <div class="form-group">
+                    <div class="form-label-row">
+                        <label for="password">Password</label>
+                        <span class="form-hint">Secured</span>
+                    </div>
                     <input
                         type="password"
                         id="password"
                         name="password"
+                        class="form-input"
                         placeholder="Enter your password"
                         required
                     >
                 </div>
 
-                <div>
-                    <label>
+                <div class="form-row-between">
+                    <label class="checkbox-label">
                         <input type="checkbox" name="remember">
-                        Remember me
+                        <span>Remember me</span>
                     </label>
                     <a href="#forgot-password">Forgot Password?</a>
                 </div>
 
-                <button type="submit">Log In →</button>
+                <button type="submit" class="btn btn-primary btn-block">Log In →</button>
             </form>
 
-            <footer>
-                <p>Don't have an account? <a href="/register">Sign Up</a></p>
+            <footer class="auth-footer">
+                <p style="margin: 0;">Don't have an account? <a href="/register"><strong>Sign Up</strong></a></p>
             </footer>
         </section>
     </main>
 
-    <footer>
+    <footer class="page site-footer">
         <p>&copy; 2026 SpotScout. Precision Location Scouting Tools.</p>
     </footer>
 </body>
