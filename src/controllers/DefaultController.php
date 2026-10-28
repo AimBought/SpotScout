@@ -40,6 +40,13 @@ final class DefaultController extends AppController
         ]);
     }
 
+    public function about(): void
+    {
+        $this->render('about', [
+            'pageTitle' => 'About | SpotScout',
+        ]);
+    }
+
     public function notFound(): void
     {
         $this->render('not-found', [
