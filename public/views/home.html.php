@@ -7,21 +7,7 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <header class="site-header">
-        <div class="page header-inner">
-            <a href="/" class="brand-logo">
-                SpotScout <span class="brand-dot" aria-hidden="true"></span>
-            </a>
-
-            <nav class="desktop-nav" aria-label="Welcome navigation">
-                <ul class="nav-list">
-                    <li><a href="/explore">Explore Feed</a></li>
-                    <li><a href="/login" class="btn btn-outline">Log In</a></li>
-                    <li><a href="/register" class="btn btn-primary">Sign Up</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <?php require __DIR__ . '/partials/header.html.php'; ?>
 
     <main class="page">
         <section class="hero" aria-labelledby="welcome-heading">
@@ -135,6 +121,7 @@
 
     <footer class="page site-footer">
         <p>By continuing, you agree to SpotScout Community Guidelines &amp; Terms.</p>
+        <p><a href="/about">About SpotScout</a></p>
     </footer>
 </body>
 </html>

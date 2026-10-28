@@ -12,6 +12,7 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 $routing = new Routing();
 
 $routing->get('/', DefaultController::class, 'index');
+$routing->get('/about', DefaultController::class, 'about');
 $routing->get('/login', SecurityController::class, 'login');
 $routing->get('/register', SecurityController::class, 'register');
 $routing->get('/explore', SpotController::class, 'explore');

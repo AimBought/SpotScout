@@ -7,13 +7,7 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <header class="site-header">
-        <div class="page header-inner">
-            <a href="/" class="brand-logo">
-                SpotScout <span class="brand-dot" aria-hidden="true"></span>
-            </a>
-        </div>
-    </header>
+    <?php require __DIR__ . '/partials/header.html.php'; ?>
 
     <main class="page auth-wrapper">
         <section class="auth-card auth-header" aria-labelledby="error-heading">
