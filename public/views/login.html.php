@@ -7,19 +7,7 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <header class="site-header">
-        <div class="page header-inner">
-            <a href="/" class="brand-logo">
-                SpotScout <span class="brand-dot" aria-hidden="true"></span>
-            </a>
-            <nav aria-label="Auth navigation">
-                <ul class="nav-list">
-                    <li><a href="/explore">Explore</a></li>
-                    <li><a href="/register" class="btn btn-outline">Sign Up</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <?php require __DIR__ . '/partials/header.html.php'; ?>
 
     <main class="page auth-wrapper">
         <section class="auth-card" aria-labelledby="login-heading">

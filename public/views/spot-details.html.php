@@ -7,20 +7,7 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <header class="site-header">
-        <div class="page header-inner">
-            <a href="/" class="brand-logo">
-                SpotScout <span class="brand-dot" aria-hidden="true"></span>
-            </a>
-            <nav aria-label="Breadcrumb navigation">
-                <ul class="nav-list">
-                    <li><a href="/explore">← Back to Explore</a></li>
-                    <li><a href="/spot/add" class="btn btn-primary">+ New Spot</a></li>
-                    <li><a href="/profile" class="profile-pill">@adam_k</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <?php require __DIR__ . '/partials/header.html.php'; ?>
 
     <main class="page">
         <article>
