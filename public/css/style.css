@@ -922,3 +922,64 @@ textarea:focus-visible {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+.theme-toggle {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.theme-toggle:focus-visible {
+    outline: none;
+}
+
+.theme-toggle:focus-visible .theme-toggle-track {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+}
+
+.theme-toggle-track {
+    position: relative;
+    width: 56px;
+    height: 30px;
+    background-color: var(--color-muted);
+    border: 1px solid var(--color-border);
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px;
+    transition: background-color 0.3s ease;
+}
+
+html[data-theme="dark"] .theme-toggle-track {
+    background-color: var(--color-brand);
+}
+
+.theme-toggle-thumb {
+    position: absolute;
+    top: 1px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    z-index: 2;
+}
+
+html[data-theme="dark"] .theme-toggle-thumb {
+    transform: translateX(26px);
+}
+
+.theme-toggle-icon-sun,
+.theme-toggle-icon-moon {
+    font-size: 13px;
+    line-height: 1;
+    z-index: 1;
+    user-select: none;
+}
