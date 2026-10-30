@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\DTO\SpotInputDTO;
 use App\Model\Spot;
 use DateTimeImmutable;
 use PDO;
@@ -36,18 +37,18 @@ final class SpotRepository
         return $row === false ? null : $this->mapRowToSpot($row);
     }
 
-    public function save(Spot $spot): void
+    public function save(SpotInputDTO $dto): int
     {
         $statement = $this->database->prepare(
             'INSERT INTO spots (title, description, status) VALUES (:title, :description, :status) RETURNING id'
         );
         $statement->execute([
-            'title' => $spot->getTitle(),
-            'description' => $spot->getDescription(),
-            'status' => $spot->getStatus(),
+            'title' => $dto->title,
+            'description' => $dto->description,
+            'status' => $dto->status,
         ]);
 
-        $spot->setId((int) $statement->fetchColumn());
+        return (int) $statement->fetchColumn();
     }
 
     public function update(Spot $spot): void
