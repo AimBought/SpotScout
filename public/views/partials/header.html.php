@@ -130,3 +130,4 @@
         </button>
     </div>
 </header>
+<script src="/js/script.js" defer></script>
