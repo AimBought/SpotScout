@@ -46,6 +46,42 @@
             z-index: 1;
             user-select: none;
         }
+
+        /* Responsywny layout nagłówka (Mobile-First) */
+        html, body {
+            max-width: 100vw;
+            overflow-x: hidden;
+        }
+        .header-inner {
+            flex-wrap: wrap;
+        }
+        .header-inner .brand-logo { order: 1; }
+        .header-inner .theme-toggle {
+            order: 2;
+            margin-left: auto;
+        }
+        .header-inner .search-form {
+            box-sizing: border-box;
+            order: 3;
+            width: 100%;
+            margin-top: 1rem;
+            min-width: 0;
+        }
+
+        @media (min-width: 48rem) {
+            .header-inner .search-form {
+                order: 2;
+                width: auto;
+                flex: 1;
+                margin-top: 0;
+                margin-inline: 2rem;
+            }
+            .header-inner .desktop-nav { order: 3; }
+            .header-inner .theme-toggle {
+                order: 4;
+                margin-left: 0;
+            }
+        }
     </style>
 
     <div class="page header-inner">
