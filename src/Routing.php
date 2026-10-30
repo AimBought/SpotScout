@@ -15,17 +15,17 @@ use App\Controller\AppController;
  */
 final class Routing
 {
-    /** @var array<int, array{method: string, pattern: string, controller: string, action: string}> */
+    /** @var array<int, array{method: string, pattern: string, controller: string|AppController, action: string}> */
     private array $routes = [];
 
     /**
      * Rejestruje trasę obsługującą żądania GET.
      *
      * @param string $path       Wzorzec ścieżki, np. '/spot/details/{id}'
-     * @param string $controller FQCN klasy kontrolera (zalecane użycie ::class)
+     * @param string|AppController $controller FQCN lub instancja kontrolera
      * @param string $action     Nazwa metody akcji do wywołania
      */
-    public function get(string $path, string $controller, string $action): void
+    public function get(string $path, string|AppController $controller, string $action): void
     {
         $this->add('GET', $path, $controller, $action);
     }
@@ -34,10 +34,10 @@ final class Routing
      * Rejestruje trasę obsługującą żądania POST.
      *
      * @param string $path       Wzorzec ścieżki
-     * @param string $controller FQCN klasy kontrolera (zalecane użycie ::class)
+     * @param string|AppController $controller FQCN lub instancja kontrolera
      * @param string $action     Nazwa metody akcji do wywołania
      */
-    public function post(string $path, string $controller, string $action): void
+    public function post(string $path, string|AppController $controller, string $action): void
     {
         $this->add('POST', $path, $controller, $action);
     }
@@ -47,13 +47,13 @@ final class Routing
      *
      * @param string $method     Metoda HTTP (GET, POST)
      * @param string $path       Wzorzec ścieżki URL
-     * @param string $controller FQCN klasy kontrolera
+     * @param string|AppController $controller FQCN lub instancja kontrolera
      * @param string $action     Nazwa metody akcji
      */
     private function add(
         string $method,
         string $path,
-        string $controller,
+        string|AppController $controller,
         string $action,
     ): void {
         $this->routes[] = [
@@ -131,8 +131,8 @@ final class Routing
                 $parameters,
             );
 
-            $controllerClass = $route['controller'];
-            $controller = new $controllerClass();
+            $controllerTarget = $route['controller'];
+            $controller = is_string($controllerTarget) ? new $controllerTarget() : $controllerTarget;
 
             if (!$controller instanceof AppController) {
                 throw new \RuntimeException('Invalid controller');

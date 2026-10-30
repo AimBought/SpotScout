@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Database;
 use App\Repository\UserRepository;
+use App\Service\MailService;
 use PDOException;
+use RuntimeException;
 
 /**
  * Kontroler odpowiedzialny za widoki uwierzytelniania:
@@ -14,6 +15,12 @@ use PDOException;
  */
 final class SecurityController extends AppController
 {
+    public function __construct(
+        private UserRepository $users,
+        private MailService $mailService,
+    ) {
+    }
+
     /**
      * Wyświetla formularz logowania.
      */
@@ -31,7 +38,7 @@ final class SecurityController extends AppController
                 $csrfError = true;
                 $errors[] = 'Formularz wygasł lub token bezpieczeństwa jest nieprawidłowy. Spróbuj ponownie.';
             } else {
-                $user = $this->users()->findByEmail($email);
+                $user = $this->users->findByEmailOrName($email);
 
                 if ($user === null || !password_verify($password, $user['password_hash'])) {
                     $errors[] = 'Nieprawidłowy adres e-mail lub hasło.';
@@ -96,10 +103,21 @@ final class SecurityController extends AppController
 
                 if ($errors === []) {
                     try {
-                        $this->users()->create($name, $email, password_hash($password, PASSWORD_DEFAULT));
-                        $this->redirect('/login');
-                    } catch (PDOException) {
-                        $errors[] = 'Konto z tym adresem e-mail już istnieje.';
+                        $this->users->create($name, $email, password_hash($password, PASSWORD_DEFAULT));
+                        try {
+                            $this->mailService->sendWelcomeEmail($email, $name);
+                            $this->redirect('/login?registered=1&mail=sent');
+                        } catch (RuntimeException $exception) {
+                            error_log($exception->getMessage());
+                            $this->redirect('/login?registered=1&mail=failed');
+                        }
+                    } catch (PDOException $exception) {
+                        if ($exception->getCode() === '23505') {
+                            $errors[] = 'Konto z tym adresem e-mail już istnieje.';
+                        } else {
+                            error_log($exception->getMessage());
+                            $errors[] = 'Nie udało się utworzyć konta. Spróbuj ponownie.';
+                        }
                     }
                 }
             }
@@ -140,8 +158,4 @@ final class SecurityController extends AppController
         $this->redirect('/');
     }
 
-    private function users(): UserRepository
-    {
-        return new UserRepository((new Database())->connect());
-    }
 }

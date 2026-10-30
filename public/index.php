@@ -5,7 +5,10 @@ declare(strict_types=1);
 use App\Controller\DefaultController;
 use App\Controller\SecurityController;
 use App\Controller\SpotController;
+use App\Database;
+use App\Repository\UserRepository;
 use App\Routing;
+use App\Service\MailService;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -18,14 +21,17 @@ session_set_cookie_params([
 session_start();
 
 $routing = new Routing();
+$userRepository = new UserRepository((new Database())->connect());
+$mailService = new MailService();
+$securityController = new SecurityController($userRepository, $mailService);
 
 $routing->get('/', DefaultController::class, 'index');
 $routing->get('/about', DefaultController::class, 'about');
-$routing->get('/login', SecurityController::class, 'login');
-$routing->post('/login', SecurityController::class, 'login');
-$routing->get('/register', SecurityController::class, 'register');
-$routing->post('/register', SecurityController::class, 'register');
-$routing->post('/logout', SecurityController::class, 'logout');
+$routing->get('/login', $securityController, 'login');
+$routing->post('/login', $securityController, 'login');
+$routing->get('/register', $securityController, 'register');
+$routing->post('/register', $securityController, 'register');
+$routing->post('/logout', $securityController, 'logout');
 $routing->get('/explore', SpotController::class, 'explore');
 $routing->get('/spot/add', SpotController::class, 'add');
 $routing->get('/spot/details/{id}', SpotController::class, 'details');
