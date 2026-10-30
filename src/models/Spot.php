@@ -40,6 +40,21 @@ final class Spot
         return $this->description;
     }
 
+    public function getShortDescription(): string
+    {
+        if ($this->description === null) {
+            return '';
+        }
+
+        if (preg_match('/^.{101}/us', $this->description) === 1) {
+            preg_match('/^.{0,100}/us', $this->description, $matches);
+
+            return $matches[0] . '...';
+        }
+
+        return $this->description;
+    }
+
     public function setDescription(?string $description): void
     {
         $this->description = $description;
