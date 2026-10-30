@@ -20,6 +20,7 @@ final class SecurityController extends AppController
     public function login(): void
     {
         $errors = [];
+        $csrfError = false;
 
         if ($this->isPost()) {
             $token = is_string($_POST['_csrf_token'] ?? null) ? $_POST['_csrf_token'] : '';
@@ -27,6 +28,7 @@ final class SecurityController extends AppController
             $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
 
             if (!$this->isCsrfTokenValid($token)) {
+                $csrfError = true;
                 $errors[] = 'Formularz wygasł lub token bezpieczeństwa jest nieprawidłowy. Spróbuj ponownie.';
             } else {
                 $user = $this->users()->findByEmail($email);
@@ -44,6 +46,10 @@ final class SecurityController extends AppController
             }
         }
 
+        if ($errors !== []) {
+            http_response_code($csrfError ? 403 : 401);
+        }
+
         $this->render('login', [
             'pageTitle' => 'Log In | SpotScout',
             'errors' => $errors,
@@ -57,6 +63,7 @@ final class SecurityController extends AppController
     public function register(): void
     {
         $errors = [];
+        $csrfError = false;
 
         if ($this->isPost()) {
             $token = is_string($_POST['_csrf_token'] ?? null) ? $_POST['_csrf_token'] : '';
@@ -66,14 +73,19 @@ final class SecurityController extends AppController
             $passwordRepeat = is_string($_POST['password_repeat'] ?? null) ? $_POST['password_repeat'] : '';
 
             if (!$this->isCsrfTokenValid($token)) {
+                $csrfError = true;
                 $errors[] = 'Formularz wygasł lub token bezpieczeństwa jest nieprawidłowy. Spróbuj ponownie.';
             } else {
                 $nameLength = preg_match_all('/./us', $name);
-                if ($name === '' || $nameLength === false || $nameLength > 120) {
-                    $errors[] = 'Nazwa musi mieć od 1 do 120 znaków.';
+                if ($name === '' || $nameLength === false || $nameLength > 100) {
+                    $errors[] = 'Nazwa musi mieć od 1 do 100 znaków.';
                 }
-                if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 255) {
-                    $errors[] = 'Podaj prawidłowy adres e-mail (maksymalnie 255 znaków).';
+                $emailLength = preg_match_all('/./us', $email);
+                if ($emailLength === false || $emailLength > 100) {
+                    $errors[] = 'Adres e-mail nie może przekraczać 100 znaków.';
+                }
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $errors[] = 'Podaj prawidłowy adres e-mail (maksymalnie 100 znaków).';
                 }
                 if (strlen($password) < 8) {
                     $errors[] = 'Hasło musi mieć co najmniej 8 znaków.';
@@ -91,6 +103,10 @@ final class SecurityController extends AppController
                     }
                 }
             }
+        }
+
+        if ($errors !== []) {
+            http_response_code($csrfError ? 403 : 400);
         }
 
         $this->render('register', [
