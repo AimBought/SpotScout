@@ -20,6 +20,12 @@
                 <p class="text-muted">Sign in to access your saved spots, coordinates, and scouting notes.</p>
             </header>
 
+            <?php if (($_GET['registered'] ?? '') === '1' && ($_GET['mail'] ?? '') === 'sent'): ?>
+                <p class="form-success" role="status">Konto zostało utworzone. E-mail powitalny wysłany!</p>
+            <?php elseif (($_GET['registered'] ?? '') === '1' && ($_GET['mail'] ?? '') === 'failed'): ?>
+                <p class="form-warning" role="status">Konto utworzone, ale wystąpił błąd poczty.</p>
+            <?php endif; ?>
+
             <?php if ($errors !== []): ?>
                 <ul class="form-errors" role="alert">
                     <?php foreach ($errors as $error): ?>
