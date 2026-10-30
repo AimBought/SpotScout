@@ -4,8 +4,16 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+/**
+ * Kontroler obsługujący strony ogólne: stronę główną, informacje o projekcie
+ * oraz stronę błędu 404.
+ */
 final class DefaultController extends AppController
 {
+    /**
+     * Wyświetla stronę główną (Welcome / Landing Page) z wyróżnionymi lokacjami
+     * oraz statystykami społeczności.
+     */
     public function index(): void
     {
         $stats = [
@@ -40,6 +48,9 @@ final class DefaultController extends AppController
         ]);
     }
 
+    /**
+     * Wyświetla stronę „O projekcie" (About SpotScout).
+     */
     public function about(): void
     {
         $this->render('about', [
@@ -47,6 +58,9 @@ final class DefaultController extends AppController
         ]);
     }
 
+    /**
+     * Wyświetla stronę błędu 404 z komunikatem informacyjnym.
+     */
     public function notFound(): void
     {
         $this->render('not-found', [

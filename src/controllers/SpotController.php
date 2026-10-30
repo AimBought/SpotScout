@@ -4,8 +4,20 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+/**
+ * Kontroler zarządzający widokami lokacji (spotów):
+ * przeglądanie, szczegóły, dodawanie oraz profil użytkownika.
+ */
 final class SpotController extends AppController
 {
+    /**
+     * Zwraca tymczasowy zbiór danych lokacji (hardcoded).
+     *
+     * Docelowo zostanie zastąpiony warstwą Model / Repository
+     * pobierającą dane z bazy danych.
+     *
+     * @return array<int, array<string, mixed>> Tablica spotów indeksowana identyfikatorem
+     */
     private function getSpotsData(): array
     {
         return [
@@ -123,6 +135,9 @@ final class SpotController extends AppController
         ];
     }
 
+    /**
+     * Wyświetla stronę Explore z listą lokacji, kategoriami i mapą.
+     */
     public function explore(): void
     {
         $spots = $this->getSpotsData();
@@ -152,6 +167,13 @@ final class SpotController extends AppController
         ]);
     }
 
+    /**
+     * Wyświetla stronę szczegółów lokacji na podstawie jej identyfikatora.
+     *
+     * Jeśli lokacja o podanym ID nie istnieje, zwraca stronę 404.
+     *
+     * @param int $id Identyfikator lokacji
+     */
     public function details(int $id): void
     {
         $spots = $this->getSpotsData();
@@ -171,6 +193,9 @@ final class SpotController extends AppController
         ]);
     }
 
+    /**
+     * Wyświetla formularz dodawania nowej lokacji.
+     */
     public function add(): void
     {
         $categories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night'];
@@ -181,6 +206,9 @@ final class SpotController extends AppController
         ]);
     }
 
+    /**
+     * Wyświetla profil użytkownika z jego danymi i dodanymi lokacjami.
+     */
     public function profile(): void
     {
         $user = [
