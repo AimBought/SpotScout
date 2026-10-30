@@ -9,12 +9,23 @@ use App\Routing;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
+$isHttps = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== '' && $_SERVER['HTTPS'] !== 'off';
+session_set_cookie_params([
+    'httponly' => true,
+    'samesite' => 'Lax',
+    'secure' => $isHttps,
+]);
+session_start();
+
 $routing = new Routing();
 
 $routing->get('/', DefaultController::class, 'index');
 $routing->get('/about', DefaultController::class, 'about');
 $routing->get('/login', SecurityController::class, 'login');
+$routing->post('/login', SecurityController::class, 'login');
 $routing->get('/register', SecurityController::class, 'register');
+$routing->post('/register', SecurityController::class, 'register');
+$routing->post('/logout', SecurityController::class, 'logout');
 $routing->get('/explore', SpotController::class, 'explore');
 $routing->get('/spot/add', SpotController::class, 'add');
 $routing->get('/spot/details/{id}', SpotController::class, 'details');

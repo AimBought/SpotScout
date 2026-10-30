@@ -20,7 +20,16 @@
                 <p class="text-muted">Sign in to access your saved spots, coordinates, and scouting notes.</p>
             </header>
 
+            <?php if ($errors !== []): ?>
+                <ul class="form-errors" role="alert">
+                    <?php foreach ($errors as $error): ?>
+                        <li><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+
             <form action="/login" method="post" class="form-stack">
+                <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                 <div class="form-group">
                     <div class="form-label-row">
                         <label for="email">Username or E-mail</label>

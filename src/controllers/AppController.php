@@ -12,6 +12,40 @@ namespace App\Controller;
  */
 abstract class AppController
 {
+    protected function isPost(): bool
+    {
+        return ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST';
+    }
+
+    protected function redirect(string $path): never
+    {
+        header('Location: ' . $path);
+        exit;
+    }
+
+    protected function requireLogin(): void
+    {
+        if (!isset($_SESSION['user_id'])) {
+            $this->redirect('/login');
+        }
+    }
+
+    protected function csrfToken(): string
+    {
+        if (!isset($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+
+        return $_SESSION['csrf_token'];
+    }
+
+    protected function isCsrfTokenValid(string $token): bool
+    {
+        return isset($_SESSION['csrf_token'])
+            && is_string($_SESSION['csrf_token'])
+            && hash_equals($_SESSION['csrf_token'], $token);
+    }
+
     /**
      * Renderuje szablon widoku, przekazując do niego zmienne.
      *

@@ -105,8 +105,19 @@
             <ul class="nav-list">
                 <li><a href="/">Welcome</a></li>
                 <li><a href="/explore" aria-current="page" class="active-link">Explore</a></li>
-                <li><a href="/spot/add" class="btn btn-primary">+ New Spot</a></li>
-                <li><a href="/profile" class="profile-pill">@adam_k</a></li>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <li><a href="/spot/add" class="btn btn-primary">+ New Spot</a></li>
+                    <li><a href="/profile" class="profile-pill"><?= htmlspecialchars((string) ($_SESSION['user_name'] ?? ''), ENT_QUOTES, 'UTF-8') ?></a></li>
+                    <li>
+                        <form action="/logout" method="post">
+                            <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                            <button type="submit" class="profile-pill">Log out</button>
+                        </form>
+                    </li>
+                <?php else: ?>
+                    <li><a href="/login" class="profile-pill">Log in</a></li>
+                    <li><a href="/register" class="profile-pill">Sign up</a></li>
+                <?php endif; ?>
             </ul>
         </nav>
 
