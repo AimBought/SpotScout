@@ -20,7 +20,16 @@
                 <p class="text-muted">Join thousands of filmmakers, photographers, and explorers worldwide.</p>
             </header>
 
+            <?php if ($errors !== []): ?>
+                <ul class="form-errors" role="alert">
+                    <?php foreach ($errors as $error): ?>
+                        <li><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+
             <form action="/register" method="post" class="form-stack">
+                <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                 <div class="form-group">
                     <div class="form-label-row">
                         <label for="username">Username</label>

@@ -198,6 +198,8 @@ final class SpotController extends AppController
      */
     public function add(): void
     {
+        $this->requireLogin();
+
         $categories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night'];
 
         $this->render('add-spot', [
