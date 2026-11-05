@@ -34,6 +34,7 @@ $routing->post('/register', $securityController, 'register');
 $routing->post('/logout', $securityController, 'logout');
 $routing->get('/explore', SpotController::class, 'explore');
 $routing->get('/spot/add', SpotController::class, 'add');
+$routing->post('/spot/add', SpotController::class, 'add');
 $routing->get('/spot/details/{id}', SpotController::class, 'details');
 $routing->get('/profile', SpotController::class, 'profile');
 

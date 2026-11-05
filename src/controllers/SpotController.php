@@ -4,234 +4,159 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-/**
- * Kontroler zarządzający widokami lokacji (spotów):
- * przeglądanie, szczegóły, dodawanie oraz profil użytkownika.
- */
+use App\Database;
+use App\DTO\SpotInputDTO;
+use App\Repository\SpotRepository;
+use RuntimeException;
+
 final class SpotController extends AppController
 {
-    /**
-     * Zwraca tymczasowy zbiór danych lokacji (hardcoded).
-     *
-     * Docelowo zostanie zastąpiony warstwą Model / Repository
-     * pobierającą dane z bazy danych.
-     *
-     * @return array<int, array<string, mixed>> Tablica spotów indeksowana identyfikatorem
-     */
-    private function getSpotsData(): array
+    private SpotRepository $spots;
+
+    public function __construct()
     {
-        return [
-            1 => [
-                'id' => 1,
-                'name' => 'The Silo Cathedral',
-                'subtitle' => 'Verdant Quarry',
-                'location' => 'Dolny Śląsk, PL',
-                'distance' => '2.4 km',
-                'coordinates' => '50.8430° N, 16.4880° E',
-                'rating' => 4.8,
-                'reviewsCount' => 42,
-                'saves' => 124,
-                'author' => '@Adam_K',
-                'badges' => ['Architecture', 'Drone Friendly', 'Tripod'],
-                'description' => 'Opuszczone silosy w starym kamieniołomie. Świetne, dramatyczne światło poranne wpadające przez otwory w dachu oraz stabilne betonowe podłoże pod statywy.',
-                'bestLight' => 'Golden Hour (06:15 - 07:30)',
-                'accessInfo' => 'Swobodny dostęp pieszo, parking 200m od wejścia.',
-                'notes' => [
-                    [
-                        'author' => 'Adam Kowalski (@Adam_K)',
-                        'role' => 'Photographer / Filmmaker',
-                        'date' => 'Yesterday',
-                        'rating' => 5.0,
-                        'gear' => '35mm f/1.4',
-                        'comment' => 'Najlepsze światło między 06:15 a 07:30 rano. Betonowe podłoże jest równe i bezpieczne pod cięższy statyw.',
-                    ],
-                    [
-                        'author' => 'Marcus Vance',
-                        'role' => 'Drone Operator',
-                        'date' => '3 days ago',
-                        'rating' => 4.5,
-                        'gear' => 'DJI Mavic / 24mm',
-                        'comment' => 'Świetny klimat o zachodzie słońca. Warto zabrać filtr ND i szeroki obiektyw.',
-                    ],
-                ],
-            ],
-            2 => [
-                'id' => 2,
-                'name' => 'Razorback Mountain Pass',
-                'subtitle' => 'Alpine Ridge',
-                'location' => 'Julian Alps, SI',
-                'distance' => '8.7 km',
-                'coordinates' => '46.3625° N, 13.8366° E',
-                'rating' => 4.9,
-                'reviewsCount' => 88,
-                'saves' => 219,
-                'author' => '@Elena_V',
-                'badges' => ['Nature', 'Drone Friendly'],
-                'description' => 'Punkt widokowy z panoramą 360 stopni na pasmo górskie. Idealne miejsce na zdjęcia krajobrazowe o wschodzie słońca oraz ujęcia z drona.',
-                'bestLight' => 'Sunrise / Blue Hour',
-                'accessInfo' => 'Dojście szlakiem około 30 minut z górnego parkingu.',
-                'notes' => [
-                    [
-                        'author' => 'Elena Rostova (@Elena_V)',
-                        'role' => 'Landscape Photographer',
-                        'date' => '5 days ago',
-                        'rating' => 5.0,
-                        'gear' => '24-70mm f/2.8',
-                        'comment' => 'Czysty horyzont w każdą stronę, jesienią często pojawiają się malownicze mgły w dolinie.',
-                    ],
-                ],
-            ],
-            3 => [
-                'id' => 3,
-                'name' => 'Neon Arcade Alley',
-                'subtitle' => 'Shinjuku District',
-                'location' => 'Shinjuku, JP',
-                'distance' => '14.2 km',
-                'coordinates' => '35.6938° N, 139.7034° E',
-                'rating' => 4.7,
-                'reviewsCount' => 64,
-                'saves' => 305,
-                'author' => '@Kenji_Cine',
-                'badges' => ['Urban', 'Night'],
-                'description' => 'Klimatyczna miejska uliczka pełna kolorowych neonów. Po deszczu asfalt tworzy efektowne odbicia światła, doskonałe do nocnych sesji portretowych i wideo.',
-                'bestLight' => 'Night (po godz. 20:00)',
-                'accessInfo' => 'Miejsce publiczne dostępne 24/7, duży ruch pieszych wieczorami.',
-                'notes' => [],
-            ],
-            4 => [
-                'id' => 4,
-                'name' => 'Oder River Overlook',
-                'subtitle' => 'North Embankment',
-                'location' => 'Wrocław, PL',
-                'distance' => '4.1 km',
-                'coordinates' => '51.1079° N, 17.0385° E',
-                'rating' => 4.8,
-                'reviewsCount' => 53,
-                'saves' => 195,
-                'author' => '@adam_cine',
-                'badges' => ['Urban', 'Architecture', 'Drone Friendly'],
-                'description' => 'Nabrzeże z szerokim widokiem na rzekę i zabytkową architekturę miasta. Spokojne miejsce na wieczorne zdjęcia z długim czasem naświetlania.',
-                'bestLight' => 'Sunset (19:30 - 20:15)',
-                'accessInfo' => 'Bezpośredni dojazd i ścieżka rowerowa wzdłuż rzeki.',
-                'notes' => [],
-            ],
-            5 => [
-                'id' => 5,
-                'name' => 'Turbine Plant No. 4',
-                'subtitle' => 'Industrial Complex',
-                'location' => 'Katowice, PL',
-                'distance' => '8.3 km',
-                'coordinates' => '50.2649° N, 19.0238° E',
-                'rating' => 4.9,
-                'reviewsCount' => 71,
-                'saves' => 312,
-                'author' => '@adam_cine',
-                'badges' => ['Industrial', 'Architecture', 'Tripod'],
-                'description' => 'Dawna hala turbin z zachowaną stalową konstrukcją i wysokimi oknami. Surowy, industrialny klimat na sesje zdjęciowe i teledyski.',
-                'bestLight' => 'Midday (12:00 - 15:00)',
-                'accessInfo' => 'Wejście po wcześniejszym zgłoszeniu u zarządcy obiektu.',
-                'notes' => [],
-            ],
-        ];
+        $this->spots = new SpotRepository((new Database())->connect());
     }
 
-    /**
-     * Wyświetla stronę Explore z listą lokacji, kategoriami i mapą.
-     */
     public function explore(): void
     {
-        $spots = $this->getSpotsData();
-
-        $categories = [
-            ['name' => 'All Locations', 'count' => 128],
-            ['name' => 'Bookmarked', 'count' => 19],
-            ['name' => 'Architecture', 'count' => 43],
-            ['name' => 'Nature', 'count' => 32],
-            ['name' => 'Urban', 'count' => 28],
-            ['name' => 'Drone Friendly', 'count' => 64],
-            ['name' => 'Night', 'count' => 18],
-        ];
-
-        $nearbyMapPins = [
-            ['name' => 'Silo Cathedral', 'distance' => '2.4 km'],
-            ['name' => 'Old Quarry', 'distance' => '3.8 km'],
-            ['name' => 'Oder Overlook', 'distance' => '4.1 km'],
-        ];
-
+        $spots = $this->spots->findAll();
         $this->render('explore', [
-            'pageTitle' => 'SpotScout – Explore Locations Feed',
-            'categories' => $categories,
-            'nearbyMapPins' => $nearbyMapPins,
+            'pageTitle' => 'SpotScout – Explore Locations',
             'spots' => $spots,
-            'totalSpots' => 128,
+            'mapSpots' => array_values(array_map(static fn ($spot): array => [
+                'title' => $spot->getTitle(),
+                'latitude' => $spot->getLatitude(),
+                'longitude' => $spot->getLongitude(),
+            ], array_filter($spots, static fn ($spot): bool => $spot->getLatitude() !== null && $spot->getLongitude() !== null))),
         ]);
     }
 
-    /**
-     * Wyświetla stronę szczegółów lokacji na podstawie jej identyfikatora.
-     *
-     * Jeśli lokacja o podanym ID nie istnieje, zwraca stronę 404.
-     *
-     * @param int $id Identyfikator lokacji
-     */
-    public function details(int $id): void
-    {
-        $spots = $this->getSpotsData();
-
-        if (!isset($spots[$id])) {
-            http_response_code(404);
-            $this->render('not-found', [
-                'pageTitle' => '404 – Spot Not Found | SpotScout',
-                'errorMessage' => 'Lokacja o identyfikatorze #' . $id . ' nie istnieje w bazie danych.',
-            ]);
-            return;
-        }
-
-        $this->render('spot-details', [
-            'pageTitle' => $spots[$id]['name'] . ' – Spot Details | SpotScout',
-            'spot' => $spots[$id],
-        ]);
-    }
-
-    /**
-     * Wyświetla formularz dodawania nowej lokacji.
-     */
     public function add(): void
     {
         $this->requireLogin();
+        $errors = [];
 
-        $categories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night'];
+        if ($this->isPost()) {
+            $token = is_string($_POST['_csrf_token'] ?? null) ? $_POST['_csrf_token'] : '';
+            if (!$this->isCsrfTokenValid($token)) {
+                http_response_code(403);
+                $errors[] = 'Nieprawidłowy token bezpieczeństwa. Odśwież formularz.';
+            }
+
+            $title = trim(is_string($_POST['title'] ?? null) ? $_POST['title'] : '');
+            $category = trim(is_string($_POST['category'] ?? null) ? $_POST['category'] : '');
+            $latitudeInput = is_string($_POST['latitude'] ?? null) ? $_POST['latitude'] : '';
+            $longitudeInput = is_string($_POST['longitude'] ?? null) ? $_POST['longitude'] : '';
+            $latitude = filter_var($latitudeInput, FILTER_VALIDATE_FLOAT);
+            $longitude = filter_var($longitudeInput, FILTER_VALIDATE_FLOAT);
+            if ($title === '' || mb_strlen($title) > 150) $errors[] = 'Podaj tytuł (maksymalnie 150 znaków).';
+            if (!in_array($category, ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night'], true)) $errors[] = 'Wybierz prawidłową kategorię.';
+            if ($latitude === false || $latitude < -90 || $latitude > 90 || $longitude === false || $longitude < -180 || $longitude > 180) $errors[] = 'Wskaż prawidłową lokalizację na mapie.';
+
+            $imagePaths = [];
+            if ($errors === []) {
+                try {
+                    $imagePaths = $this->storeUploadedImages($_FILES['image'] ?? null);
+                } catch (RuntimeException $exception) {
+                    $errors[] = $exception->getMessage();
+                }
+            }
+
+            if ($errors === []) {
+                $spotId = $this->spots->save(new SpotInputDTO($title, null, 'active', (float) $latitude, (float) $longitude, $category, $imagePaths[0], (int) $_SESSION['user_id']));
+                $this->spots->saveAdditionalImages($spotId, array_slice($imagePaths, 1));
+                $this->redirect('/explore');
+            }
+        }
 
         $this->render('add-spot', [
             'pageTitle' => 'Add New Spot | SpotScout',
-            'categories' => $categories,
+            'categories' => ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night'],
+            'csrfToken' => $this->csrfToken(),
+            'errors' => $errors,
         ]);
     }
 
-    /**
-     * Wyświetla profil użytkownika z jego danymi i dodanymi lokacjami.
-     */
+    public function details(int $id): void
+    {
+        $spot = $this->spots->find($id);
+        if ($spot === null) {
+            http_response_code(404);
+            $this->render('not-found', ['pageTitle' => 'Spot not found | SpotScout', 'errorMessage' => 'Spot #' . $id . ' does not exist.']);
+            return;
+        }
+        $this->render('spot-details', [
+            'pageTitle' => $spot->getTitle() . ' | SpotScout',
+            'spot' => $spot,
+            'images' => $this->spots->findImagePaths($id, $spot->getImagePath()),
+        ]);
+    }
+
     public function profile(): void
     {
-        $user = [
-            'name' => 'Adam Kowalski',
-            'handle' => '@adam_cine',
-            'role' => 'Photographer & Drone Operator',
-            'location' => 'Wrocław, PL',
-            'bio' => 'Searching for brutalism, fog, and golden hour light. Documenting industrial relics and mountain viewpoints across Central Europe.',
-            'points' => 154,
-            'addedCount' => 12,
-            'savesCount' => '3.8k',
-            'rank' => 'Top 5% Scout',
-            'gear' => ['RED Komodo 6K', '35mm f/1.4 Prime', 'DJI Mavic 3 Pro'],
-        ];
+        $this->requireLogin();
+        $this->redirect('/explore');
+    }
 
-        $spots = $this->getSpotsData();
+    /** Validate image bytes and store a uniquely named JPEG or PNG. */
+    private function storeUploadedImage(mixed $file): string
+    {
+        if (!is_array($file) || !isset($file['error'], $file['tmp_name'], $file['size'], $file['name']) || !is_int($file['error'])) {
+            throw new RuntimeException('Dodaj zdjęcie w formacie JPEG lub PNG.');
+        }
+        if ($file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file((string) $file['tmp_name'])) {
+            throw new RuntimeException('Przesyłanie zdjęcia nie powiodło się.');
+        }
+        if ((int) $file['size'] < 1 || (int) $file['size'] > 5 * 1024 * 1024) {
+            throw new RuntimeException('Zdjęcie musi mieć maksymalnie 5 MB.');
+        }
 
-        $this->render('profile', [
-            'pageTitle' => $user['name'] . ' (' . $user['handle'] . ') | SpotScout Profile',
-            'user' => $user,
-            'mySpots' => $spots,
-        ]);
+        $extension = strtolower(pathinfo((string) $file['name'], PATHINFO_EXTENSION));
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file((string) $file['tmp_name']);
+        $allowed = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png'];
+        if (!isset($allowed[$extension]) || $mime !== $allowed[$extension] || @getimagesize((string) $file['tmp_name']) === false) {
+            throw new RuntimeException('Dozwolone są wyłącznie prawidłowe pliki JPEG i PNG.');
+        }
+
+        $directory = dirname(__DIR__, 2) . '/public/uploads/spots';
+        if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
+            throw new RuntimeException('Nie można przygotować katalogu na zdjęcia.');
+        }
+        $filename = uniqid('spot_', true) . '.' . $extension;
+        if (!move_uploaded_file((string) $file['tmp_name'], $directory . '/' . $filename)) {
+            throw new RuntimeException('Nie udało się zapisać zdjęcia.');
+        }
+        return '/uploads/spots/' . $filename;
+    }
+
+    /** @return array<int, string> */
+    private function storeUploadedImages(mixed $files): array
+    {
+        if (!is_array($files) || !isset($files['name'], $files['type'], $files['tmp_name'], $files['error'], $files['size']) || !is_array($files['name'])) {
+            throw new RuntimeException('Dodaj co najmniej jedno zdjęcie.');
+        }
+        $count = count($files['name']);
+        if ($count < 1 || $count > 5) {
+            throw new RuntimeException('Możesz dodać od 1 do 5 zdjęć.');
+        }
+
+        $paths = [];
+        try {
+            for ($index = 0; $index < $count; $index++) {
+                $paths[] = $this->storeUploadedImage([
+                    'name' => $files['name'][$index] ?? '',
+                    'tmp_name' => $files['tmp_name'][$index] ?? '',
+                    'error' => $files['error'][$index] ?? UPLOAD_ERR_NO_FILE,
+                    'size' => $files['size'][$index] ?? 0,
+                ]);
+            }
+        } catch (RuntimeException $exception) {
+            foreach ($paths as $path) {
+                @unlink(dirname(__DIR__, 2) . '/public' . $path);
+            }
+            throw $exception;
+        }
+        return $paths;
     }
 }

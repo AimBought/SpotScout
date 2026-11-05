@@ -1,4 +1,4 @@
-CREATE TABLE spots (
+CREATE TABLE IF NOT EXISTS spots (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     title VARCHAR(150) NOT NULL,
     description TEXT NULL,
@@ -8,5 +8,5 @@ CREATE TABLE spots (
     CONSTRAINT spots_status_check CHECK (status IN ('planned', 'active', 'archived'))
 );
 
-CREATE INDEX spots_status_idx ON spots (status);
-CREATE INDEX spots_created_at_idx ON spots (created_at);
+CREATE INDEX IF NOT EXISTS spots_status_idx ON spots (status);
+CREATE INDEX IF NOT EXISTS spots_created_at_idx ON spots (created_at);

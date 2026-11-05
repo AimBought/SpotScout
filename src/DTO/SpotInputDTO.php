@@ -10,6 +10,11 @@ final class SpotInputDTO
         public string $title,
         public ?string $description,
         public string $status,
+        public ?float $latitude = null,
+        public ?float $longitude = null,
+        public ?string $category = null,
+        public ?string $image_path = null,
+        public ?int $user_id = null,
     ) {
     }
 }
