@@ -14,6 +14,25 @@ final class Spot
     private string $status = 'active';
     private ?DateTimeImmutable $createdAt = null;
     private ?DateTimeImmutable $updatedAt = null;
+    private ?float $latitude = null;
+    private ?float $longitude = null;
+    private ?string $category = null;
+    private ?string $image_path = null;
+    private ?int $userId = null;
+    private ?string $authorName = null;
+
+    public function getLatitude(): ?float { return $this->latitude; }
+    public function setLatitude(?float $value): void { $this->latitude = $value; }
+    public function getLongitude(): ?float { return $this->longitude; }
+    public function setLongitude(?float $value): void { $this->longitude = $value; }
+    public function getCategory(): ?string { return $this->category; }
+    public function setCategory(?string $value): void { $this->category = $value; }
+    public function getImagePath(): ?string { return $this->image_path; }
+    public function setImagePath(?string $value): void { $this->image_path = $value; }
+    public function getUserId(): ?int { return $this->userId; }
+    public function setUserId(?int $value): void { $this->userId = $value; }
+    public function getAuthorName(): ?string { return $this->authorName; }
+    public function setAuthorName(?string $value): void { $this->authorName = $value; }
 
     public function getId(): ?int
     {
