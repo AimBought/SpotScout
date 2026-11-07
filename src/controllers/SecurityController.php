@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Repository\UserRepository;
+use App\Repository\SpotRepository;
 use App\Service\MailService;
 use PDOException;
 use RuntimeException;
@@ -18,6 +19,7 @@ final class SecurityController extends AppController
     public function __construct(
         private UserRepository $users,
         private MailService $mailService,
+        private SpotRepository $spots,
     ) {
     }
 
@@ -26,6 +28,10 @@ final class SecurityController extends AppController
      */
     public function login(): void
     {
+        if (isset($_SESSION['user_id'])) {
+            $this->redirect('/explore');
+        }
+
         $errors = [];
         $csrfError = false;
 
@@ -62,6 +68,7 @@ final class SecurityController extends AppController
             'pageTitle' => 'Log In | SpotScout',
             'errors' => $errors,
             'csrfToken' => $this->csrfToken(),
+            'featuredSpot' => $this->spots->findFeaturedSpot(),
         ]);
     }
 
@@ -70,6 +77,10 @@ final class SecurityController extends AppController
      */
     public function register(): void
     {
+        if (isset($_SESSION['user_id'])) {
+            $this->redirect('/explore');
+        }
+
         $errors = [];
         $csrfError = false;
 
@@ -132,6 +143,7 @@ final class SecurityController extends AppController
             'pageTitle' => 'Join SpotScout | Create an Account',
             'errors' => $errors,
             'csrfToken' => $this->csrfToken(),
+            'featuredSpot' => $this->spots->findFeaturedSpot(),
         ]);
     }
 

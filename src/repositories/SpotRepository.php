@@ -37,6 +37,16 @@ final class SpotRepository
         return $row === false ? null : $this->mapRowToSpot($row);
     }
 
+    public function findFeaturedSpot(): ?Spot
+    {
+        $statement = $this->database->query(
+            'SELECT s.id, s.title, s.description, s.status, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id ORDER BY s.created_at DESC, s.id DESC LIMIT 1'
+        );
+        $row = $statement->fetch();
+
+        return $row === false ? null : $this->mapRowToSpot($row);
+    }
+
     /** @return array<int, Spot> */
     public function findByUserId(int $userId): array
     {

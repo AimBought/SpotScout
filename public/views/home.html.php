@@ -4,129 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
-    <script>
-        (function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLGPg8YJ04IY4YZ0WMx6Y0hSp4pMwDlkRzTFbGMPT4ec7Zua7+CQRkpw==" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <link rel="stylesheet" href="/css/style.css">
+    <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link rel="stylesheet" href="/css/style.css?v=split-screen-3">
 </head>
-<body>
+<body class="split-screen-body">
     <?php require __DIR__ . '/partials/header.html.php'; ?>
-
-    <main class="page">
-        <section class="hero" aria-labelledby="welcome-heading">
-            <div>
-                <span class="radar-status">● LOCATION SCOUTING PLATFORM</span>
-                <h1 id="welcome-heading">Discover &amp; scout breathtaking locations for photography and cinema.</h1>
-                <p class="text-muted">
-                    Find unique viewpoints, industrial halls, architecture, and nature spots verified by photographers, filmmakers, and explorers worldwide.
-                </p>
-
-                <div class="hero-actions">
-                    <a href="/explore" class="btn btn-primary">Browse Explore Feed →</a>
-                    <a href="/login" class="btn btn-outline">Log In</a>
-                    <a href="/register" class="btn btn-outline">Create Account</a>
+    <main class="split-screen">
+        <section class="split-content">
+            <div class="split-main">
+                <span class="radar-status">THE WORLD IS YOUR SET</span>
+                <h1>Discover &amp; Scout Breathtaking Cine Locations</h1>
+                <p class="split-description">Find remarkable places for your next shoot, explore real locations, and share the spots worth remembering with a creative community.</p>
+                <div class="split-actions">
+                    <a class="btn btn-primary" href="/login">Log In</a>
+                    <a class="btn btn-outline" href="/register">Sign Up</a>
                 </div>
             </div>
-
-            <?php if (!empty($spots[0])): ?>
-                <?php $featured = $spots[0]; ?>
-                <aside class="spot-card" aria-label="Featured Spot Preview">
-                    <div class="spot-card-visual">
-                        <ul class="tag-list">
-                            <li class="badge">SPOT PREVIEW</li>
-                            <li class="badge"><?= htmlspecialchars($featured['category'], ENT_QUOTES, 'UTF-8') ?></li>
-                        </ul>
-                        <div class="visual-bottom">
-                            <span class="photo-author">📍 <?= htmlspecialchars($featured['coordinates'], ENT_QUOTES, 'UTF-8') ?></span>
-                            <span class="saves-pill">★ <?= htmlspecialchars((string) $featured['rating'], ENT_QUOTES, 'UTF-8') ?></span>
-                        </div>
-                    </div>
-                    <div class="spot-card-body">
-                        <h2>
-                            <a href="/spot/details/<?= (int) $featured['id'] ?>" class="spot-title-link">
-                                <?= htmlspecialchars($featured['name'], ENT_QUOTES, 'UTF-8') ?>
-                            </a>
-                        </h2>
-                        <p class="spot-meta"><?= htmlspecialchars($featured['location'], ENT_QUOTES, 'UTF-8') ?></p>
-                        <a href="/spot/details/<?= (int) $featured['id'] ?>" class="details-link">Inspect Location →</a>
-                    </div>
-                </aside>
-            <?php endif; ?>
+            <footer class="split-footer">Discover places. Create something unforgettable.</footer>
         </section>
-
-        <section class="stats-grid" aria-label="Community Statistics">
-            <div class="stat-box">
-                <span class="stat-value"><?= htmlspecialchars($stats['verifiedSpots'], ENT_QUOTES, 'UTF-8') ?></span>
-                <span class="stat-label">Verified Spots</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-value"><?= htmlspecialchars($stats['activeUsers'], ENT_QUOTES, 'UTF-8') ?></span>
-                <span class="stat-label">Active Creators</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-value"><?= htmlspecialchars($stats['droneFriendly'], ENT_QUOTES, 'UTF-8') ?></span>
-                <span class="stat-label">Drone-Friendly Locations</span>
-            </div>
-        </section>
-
-        <section class="features-grid" aria-label="Key Features">
-            <article class="feature-box">
-                <h2>📍 Verified GPS Telemetry</h2>
-                <p class="text-muted">Exact coordinates, parking notes, and terrain access verified on site.</p>
-            </article>
-            <article class="feature-box">
-                <h2>☀️ Golden Hour Tracking</h2>
-                <p class="text-muted">Optimal lighting hours and sun direction tips shared by photographers.</p>
-            </article>
-            <article class="feature-box">
-                <h2>🚁 Drone &amp; Tripod Rules</h2>
-                <p class="text-muted">Clear badges for drone clearance, ground stability, and permit requirements.</p>
-            </article>
-        </section>
-
-        <section aria-labelledby="preview-heading" style="margin-block: var(--space-4);">
-            <div class="feed-header">
-                <h2 id="preview-heading">Featured Locations</h2>
-                <a href="/explore" class="details-link">View All in Explore →</a>
-            </div>
-
-            <div class="spots-grid">
-                <?php foreach ($spots as $spot): ?>
-                    <article class="spot-card">
-                        <div class="spot-card-body">
-                            <span class="badge" style="align-self: flex-start; margin-bottom: var(--space-1);">
-                                <?= htmlspecialchars($spot['category'], ENT_QUOTES, 'UTF-8') ?>
-                            </span>
-                            <div class="spot-card-title-row">
-                                <h3>
-                                    <a href="/spot/details/<?= (int) $spot['id'] ?>" class="spot-title-link">
-                                        <?= htmlspecialchars($spot['name'], ENT_QUOTES, 'UTF-8') ?>
-                                    </a>
-                                </h3>
-                                <span class="rating-badge">★ <?= htmlspecialchars((string) $spot['rating'], ENT_QUOTES, 'UTF-8') ?></span>
-                            </div>
-                            <p class="spot-meta">
-                                📍 <?= htmlspecialchars($spot['location'], ENT_QUOTES, 'UTF-8') ?> • <?= htmlspecialchars($spot['coordinates'], ENT_QUOTES, 'UTF-8') ?>
-                            </p>
-                            <a href="/spot/details/<?= (int) $spot['id'] ?>" class="details-link">Open Spot →</a>
-                        </div>
-                    </article>
-                <?php endforeach; ?>
-            </div>
-        </section>
+        <?php require __DIR__ . '/partials/featured-spot-panel.html.php'; ?>
     </main>
-
-    <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
-        <a href="/explore" class="mobile-nav-item">Explore</a>
-        <a href="/spot/add" class="mobile-nav-item mobile-nav-add">+ Add</a>
-        <a href="/login" class="mobile-nav-item">Log In</a>
-    </nav>
-
-    <footer class="page site-footer">
-        <p>By continuing, you agree to SpotScout Community Guidelines &amp; Terms.</p>
-        <p><a href="/about">About SpotScout</a></p>
-    </footer>
-<script src="/js/theme.js" defer></script>
+    <script src="/js/theme.js" defer></script>
 </body>
 </html>

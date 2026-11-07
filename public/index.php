@@ -7,6 +7,7 @@ use App\Controller\ProfileController;
 use App\Controller\SecurityController;
 use App\Controller\SpotController;
 use App\Database;
+use App\Repository\SpotRepository;
 use App\Repository\UserRepository;
 use App\Routing;
 use App\Service\MailService;
@@ -23,13 +24,14 @@ session_start();
 
 $routing = new Routing();
 $userRepository = new UserRepository((new Database())->connect());
-$spotRepository = new \App\Repository\SpotRepository((new Database())->connect());
+$spotRepository = new SpotRepository((new Database())->connect());
 $profileController = new ProfileController($userRepository, $spotRepository);
 $mailService = new MailService();
-$securityController = new SecurityController($userRepository, $mailService);
+$securityController = new SecurityController($userRepository, $mailService, $spotRepository);
+$defaultController = new DefaultController($spotRepository);
 
-$routing->get('/', DefaultController::class, 'index');
-$routing->get('/about', DefaultController::class, 'about');
+$routing->get('/', $defaultController, 'index');
+$routing->get('/about', $defaultController, 'about');
 $routing->get('/login', $securityController, 'login');
 $routing->post('/login', $securityController, 'login');
 $routing->get('/register', $securityController, 'register');
@@ -49,5 +51,5 @@ $routeFound = $routing->dispatch(
 
 if (!$routeFound) {
     http_response_code(404);
-    (new DefaultController())->notFound();
+    $defaultController->notFound();
 }

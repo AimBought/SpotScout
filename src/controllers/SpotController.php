@@ -20,6 +20,8 @@ final class SpotController extends AppController
 
     public function explore(): void
     {
+        $this->requireLogin();
+
         $spots = $this->spots->findAll();
         $this->render('explore', [
             'pageTitle' => 'SpotScout – Explore Locations',
