@@ -46,6 +46,67 @@
             z-index: 1;
             user-select: none;
         }
+        .profile-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .header-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex: 0 0 32px;
+        }
+        .logout-form { margin: 0; }
+        .logout-link {
+            background: none;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-pill);
+            padding: 0.45rem 0.85rem;
+            cursor: pointer;
+            color: var(--color-text);
+            font: inherit;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+        .logout-link:hover { background: var(--color-surface-alt); border-color: var(--color-brand); }
+        .desktop-nav .nav-list { flex-wrap: nowrap; gap: 0.25rem; }
+        .desktop-nav .nav-list > li { display: flex; align-items: center; }
+        .desktop-nav .nav-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 2.75rem;
+            padding: 0.55rem 0.85rem;
+            border: 1px solid transparent;
+            border-radius: var(--radius-pill);
+            color: var(--color-muted);
+            font-weight: 600;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+        }
+        .desktop-nav .nav-link:hover,
+        .desktop-nav .nav-link[aria-current="page"] {
+            color: var(--color-brand);
+            background: color-mix(in srgb, var(--color-brand) 10%, var(--color-surface));
+            border-color: color-mix(in srgb, var(--color-brand) 22%, var(--color-border));
+        }
+        .profile-pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 2.75rem;
+            padding: 0.3rem 0.75rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-pill);
+            background: var(--color-surface-alt);
+            color: var(--color-text);
+            font-weight: 600;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .profile-pill:hover { border-color: var(--color-brand); color: var(--color-brand); }
+        .logout-link { min-height: 2.75rem; white-space: nowrap; }
 
         /* Responsywny layout nagłówka (Mobile-First) */
         html, body {
@@ -103,15 +164,15 @@
 
         <nav class="desktop-nav" aria-label="Main navigation">
             <ul class="nav-list">
-                <li><a href="/">Welcome</a></li>
-                <li><a href="/explore" aria-current="page" class="active-link">Explore</a></li>
+                <li><a href="/" class="nav-link">Welcome</a></li>
+                <li><a href="/explore" aria-current="page" class="nav-link active-link">Explore</a></li>
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <li><a href="/spot/add" class="btn btn-primary">+ New Spot</a></li>
-                    <li><a href="/profile" class="profile-pill"><?= htmlspecialchars((string) ($_SESSION['user_name'] ?? ''), ENT_QUOTES, 'UTF-8') ?></a></li>
+                    <li><a href="/profile" class="profile-pill profile-link"><img class="header-avatar" src="<?= htmlspecialchars((string) ($_SESSION['user_avatar_path'] ?? '/images/default-avatar.svg'), ENT_QUOTES, 'UTF-8') ?>" alt="" width="32" height="32"><span><?= htmlspecialchars((string) ($_SESSION['user_name'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span></a></li>
                     <li>
-                        <form action="/logout" method="post">
+                        <form action="/logout" method="post" class="logout-form">
                             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
-                            <button type="submit" class="profile-pill">Log out</button>
+                            <button type="submit" class="logout-link">Log out</button>
                         </form>
                     </li>
                 <?php else: ?>

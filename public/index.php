@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Controller\DefaultController;
+use App\Controller\ProfileController;
 use App\Controller\SecurityController;
 use App\Controller\SpotController;
 use App\Database;
@@ -22,6 +23,8 @@ session_start();
 
 $routing = new Routing();
 $userRepository = new UserRepository((new Database())->connect());
+$spotRepository = new \App\Repository\SpotRepository((new Database())->connect());
+$profileController = new ProfileController($userRepository, $spotRepository);
 $mailService = new MailService();
 $securityController = new SecurityController($userRepository, $mailService);
 
@@ -36,7 +39,8 @@ $routing->get('/explore', SpotController::class, 'explore');
 $routing->get('/spot/add', SpotController::class, 'add');
 $routing->post('/spot/add', SpotController::class, 'add');
 $routing->get('/spot/details/{id}', SpotController::class, 'details');
-$routing->get('/profile', SpotController::class, 'profile');
+$routing->get('/profile', $profileController, 'index');
+$routing->post('/profile/avatar', $profileController, 'uploadAvatar');
 
 $routeFound = $routing->dispatch(
     $_SERVER['REQUEST_METHOD'],
