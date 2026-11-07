@@ -20,6 +20,7 @@ final class Spot
     private ?string $image_path = null;
     private ?int $userId = null;
     private ?string $authorName = null;
+    private ?string $authorAvatarPath = null;
 
     public function getLatitude(): ?float { return $this->latitude; }
     public function setLatitude(?float $value): void { $this->latitude = $value; }
@@ -33,6 +34,8 @@ final class Spot
     public function setUserId(?int $value): void { $this->userId = $value; }
     public function getAuthorName(): ?string { return $this->authorName; }
     public function setAuthorName(?string $value): void { $this->authorName = $value; }
+    public function getAuthorAvatarPath(): ?string { return $this->authorAvatarPath; }
+    public function setAuthorAvatarPath(?string $value): void { $this->authorAvatarPath = $value; }
 
     public function getId(): ?int
     {

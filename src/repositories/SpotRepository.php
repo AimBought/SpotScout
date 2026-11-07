@@ -19,7 +19,7 @@ final class SpotRepository
     public function findAll(): array
     {
         $statement = $this->database->prepare(
-            'SELECT s.id, s.title, s.description, s.status, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name FROM spots s LEFT JOIN users u ON u.id = s.user_id ORDER BY s.id'
+            'SELECT s.id, s.title, s.description, s.status, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id ORDER BY s.id'
         );
         $statement->execute();
 
@@ -29,12 +29,23 @@ final class SpotRepository
     public function find(int $id): ?Spot
     {
         $statement = $this->database->prepare(
-            'SELECT s.id, s.title, s.description, s.status, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.id = :id'
+            'SELECT s.id, s.title, s.description, s.status, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.id = :id'
         );
         $statement->execute(['id' => $id]);
         $row = $statement->fetch();
 
         return $row === false ? null : $this->mapRowToSpot($row);
+    }
+
+    /** @return array<int, Spot> */
+    public function findByUserId(int $userId): array
+    {
+        $statement = $this->database->prepare(
+            'SELECT s.id, s.title, s.description, s.status, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.user_id = :user_id ORDER BY s.created_at DESC'
+        );
+        $statement->execute(['user_id' => $userId]);
+
+        return array_map(fn (array $row): Spot => $this->mapRowToSpot($row), $statement->fetchAll());
     }
 
     public function save(SpotInputDTO $dto): int
@@ -113,6 +124,7 @@ final class SpotRepository
         $spot->setImagePath($row['image_path'] === null ? null : (string) $row['image_path']);
         $spot->setUserId($row['user_id'] === null ? null : (int) $row['user_id']);
         $spot->setAuthorName($row['author_name'] === null ? null : (string) $row['author_name']);
+        $spot->setAuthorAvatarPath($row['author_avatar_path'] === null ? null : (string) $row['author_avatar_path']);
 
         return $spot;
     }
