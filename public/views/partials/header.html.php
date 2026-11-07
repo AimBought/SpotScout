@@ -150,6 +150,7 @@
             SpotScout <span class="brand-dot" aria-hidden="true"></span>
         </a>
 
+        <?php if (isset($_SESSION['user_id'])): ?>
         <form action="/explore" method="get" role="search" class="search-form">
             <label for="search-spots" class="sr-only">Search spots</label>
             <input
@@ -161,12 +162,12 @@
             >
             <button type="submit" class="btn btn-primary">Search</button>
         </form>
+        <?php endif; ?>
 
         <nav class="desktop-nav" aria-label="Main navigation">
             <ul class="nav-list">
-                <li><a href="/" class="nav-link">Welcome</a></li>
-                <li><a href="/explore" aria-current="page" class="nav-link active-link">Explore</a></li>
                 <?php if (isset($_SESSION['user_id'])): ?>
+                    <li><a href="/explore" aria-current="page" class="nav-link active-link">Explore</a></li>
                     <li><a href="/spot/add" class="btn btn-primary">+ New Spot</a></li>
                     <li><a href="/profile" class="profile-pill profile-link"><img class="header-avatar" src="<?= htmlspecialchars((string) ($_SESSION['user_avatar_path'] ?? '/images/default-avatar.svg'), ENT_QUOTES, 'UTF-8') ?>" alt="" width="32" height="32"><span><?= htmlspecialchars((string) ($_SESSION['user_name'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span></a></li>
                     <li>
@@ -176,6 +177,7 @@
                         </form>
                     </li>
                 <?php else: ?>
+                    <li><a href="/" class="nav-link">Welcome</a></li>
                     <li><a href="/login" class="profile-pill">Log in</a></li>
                     <li><a href="/register" class="profile-pill">Sign up</a></li>
                 <?php endif; ?>
