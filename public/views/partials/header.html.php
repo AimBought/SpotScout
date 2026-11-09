@@ -151,15 +151,30 @@
         </a>
 
         <?php if (isset($_SESSION['user_id'])): ?>
-        <form action="/explore" method="get" role="search" class="search-form">
+        <form action="/explore" method="get" role="search" class="search-form" id="spot-search-form">
             <label for="search-spots" class="sr-only">Search spots</label>
             <input
                 type="search"
                 id="search-spots"
                 name="q"
                 class="search-input"
+                value="<?= htmlspecialchars(is_string($_GET['q'] ?? null) ? $_GET['q'] : '', ENT_QUOTES, 'UTF-8') ?>"
                 placeholder="Search spots, coordinates, tags..."
             >
+            <?php $spotSearchCategories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night']; ?>
+            <?php $selectedSearchCategories = isset($_GET['categories']) && is_array($_GET['categories']) ? array_filter($_GET['categories'], 'is_string') : []; ?>
+            <details class="search-filter">
+                <summary class="search-filter-button" aria-label="Filter by categories" title="Filter by categories">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.5 7.5V19l-3 1v-7.5L4 5z"/></svg>
+                    <span class="sr-only">Filter by categories</span>
+                </summary>
+                <div class="search-filter-menu">
+                    <strong>Filter categories</strong>
+                    <?php foreach ($spotSearchCategories as $searchCategory): ?>
+                        <label><input type="checkbox" name="categories[]" value="<?= htmlspecialchars($searchCategory, ENT_QUOTES, 'UTF-8') ?>" <?= in_array($searchCategory, $selectedSearchCategories, true) ? 'checked' : '' ?>><span><?= htmlspecialchars($searchCategory, ENT_QUOTES, 'UTF-8') ?></span></label>
+                    <?php endforeach; ?>
+                </div>
+            </details>
             <button type="submit" class="btn btn-primary">Search</button>
         </form>
         <?php endif; ?>
@@ -193,4 +208,4 @@
         </button>
     </div>
 </header>
-<script src="/js/script.js" defer></script>
+<script src="/js/script.js?v=spot-search-2" defer></script>
