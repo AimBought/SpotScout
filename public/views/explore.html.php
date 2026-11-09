@@ -6,7 +6,7 @@
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="/css/style.css?v=spot-search-3">
+    <link rel="stylesheet" href="/css/style.css?v=spot-bookmark-1">
     <style>
         #explore-map{height:380px;border:1px solid var(--color-border);border-radius:var(--radius);margin-block:var(--space-2)}
         .spot-card-link{display:flex;flex-direction:column;height:100%;color:inherit}
@@ -35,6 +35,7 @@
             <p class="empty-spots" id="spot-search-empty" role="status" hidden>Nie znaleziono spotów spełniających wybrane kryteria.</p>
             <?php foreach ($spots as $spot): ?>
                 <?php $imagePath = $spot->getImagePath(); ?>
+                <?php $isSpotBookmarked = in_array((int) $spot->getId(), $bookmarkedSpotIds, true); ?>
                 <article class="spot-card" data-spot-id="<?= (int) $spot->getId() ?>">
                     <a class="spot-card-link" href="/spot/details/<?= (int) $spot->getId() ?>">
                         <div class="spot-card-visual<?= $imagePath !== null ? ' has-image' : '' ?>"<?php if ($imagePath !== null): ?> style="background-image: url('<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>')"<?php endif; ?>>
@@ -46,6 +47,13 @@
                             <footer class="spot-card-footer"><span class="light-tag">Szczegóły i informacje</span><span class="details-link">Zobacz spot →</span></footer>
                         </div>
                     </a>
+                    <form class="spot-bookmark-form" action="/spot/bookmark/<?= (int) $spot->getId() ?>" method="post">
+                        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="return_to" value="/explore">
+                        <button class="spot-bookmark-button<?= $isSpotBookmarked ? ' is-bookmarked' : '' ?>" type="submit" aria-label="<?= $isSpotBookmarked ? 'Remove bookmark' : 'Save spot' ?>: <?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>" aria-pressed="<?= $isSpotBookmarked ? 'true' : 'false' ?>" title="<?= $isSpotBookmarked ? 'Saved spot' : 'Save spot' ?>">
+                            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.75h12v16.5l-6-4-6 4z"/></svg>
+                        </button>
+                    </form>
                 </article>
             <?php endforeach; ?>
         </section>

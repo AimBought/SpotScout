@@ -58,6 +58,51 @@ final class SpotRepository
         return array_map(fn (array $row): Spot => $this->mapRowToSpot($row), $statement->fetchAll());
     }
 
+    /** @return array<int, Spot> */
+    public function findBookmarkedByUserId(int $userId): array
+    {
+        $statement = $this->database->prepare(
+            'SELECT s.id, s.title, s.description, s.status, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path '
+            . 'FROM spot_bookmarks b JOIN spots s ON s.id = b.spot_id LEFT JOIN users u ON u.id = s.user_id '
+            . 'WHERE b.user_id = :user_id ORDER BY b.created_at DESC'
+        );
+        $statement->execute(['user_id' => $userId]);
+
+        return array_map(fn (array $row): Spot => $this->mapRowToSpot($row), $statement->fetchAll());
+    }
+
+    /** @return array<int, int> */
+    public function findBookmarkedIdsByUserId(int $userId): array
+    {
+        $statement = $this->database->prepare('SELECT spot_id FROM spot_bookmarks WHERE user_id = :user_id');
+        $statement->execute(['user_id' => $userId]);
+
+        return array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN));
+    }
+
+    public function isBookmarkedByUser(int $userId, int $spotId): bool
+    {
+        $statement = $this->database->prepare('SELECT 1 FROM spot_bookmarks WHERE user_id = :user_id AND spot_id = :spot_id');
+        $statement->execute(['user_id' => $userId, 'spot_id' => $spotId]);
+
+        return $statement->fetchColumn() !== false;
+    }
+
+    /** Toggles a bookmark and returns its new state. */
+    public function toggleBookmark(int $userId, int $spotId): bool
+    {
+        $delete = $this->database->prepare('DELETE FROM spot_bookmarks WHERE user_id = :user_id AND spot_id = :spot_id');
+        $delete->execute(['user_id' => $userId, 'spot_id' => $spotId]);
+        if ($delete->rowCount() > 0) {
+            return false;
+        }
+
+        $insert = $this->database->prepare('INSERT INTO spot_bookmarks (user_id, spot_id) VALUES (:user_id, :spot_id) ON CONFLICT (user_id, spot_id) DO NOTHING');
+        $insert->execute(['user_id' => $userId, 'spot_id' => $spotId]);
+
+        return true;
+    }
+
     public function save(SpotInputDTO $dto): int
     {
         $statement = $this->database->prepare(
