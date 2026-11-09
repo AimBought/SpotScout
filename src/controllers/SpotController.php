@@ -26,6 +26,8 @@ final class SpotController extends AppController
         $this->render('explore', [
             'pageTitle' => 'SpotScout – Explore Locations',
             'spots' => $spots,
+            'bookmarkedSpotIds' => $this->spots->findBookmarkedIdsByUserId((int) $_SESSION['user_id']),
+            'csrfToken' => $this->csrfToken(),
             'mapSpots' => array_values(array_map(static fn ($spot): array => [
                 'title' => $spot->getTitle(),
                 'latitude' => $spot->getLatitude(),
@@ -100,6 +102,7 @@ final class SpotController extends AppController
             'spot' => $spot,
             'images' => $this->spots->findImagePaths($id, $spot->getImagePath()),
             'currentUserId' => isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null,
+            'isBookmarked' => isset($_SESSION['user_id']) && $this->spots->isBookmarkedByUser((int) $_SESSION['user_id'], $id),
             'csrfToken' => $this->csrfToken(),
         ]);
     }
@@ -139,6 +142,29 @@ final class SpotController extends AppController
         }
 
         $this->redirect('/explore');
+    }
+
+    public function toggleBookmark(int $id): void
+    {
+        $this->requireLogin();
+
+        $token = is_string($_POST['_csrf_token'] ?? null) ? $_POST['_csrf_token'] : '';
+        if (!$this->isPost() || !$this->isCsrfTokenValid($token)) {
+            http_response_code(403);
+            return;
+        }
+        if ($this->spots->find($id) === null) {
+            http_response_code(404);
+            return;
+        }
+
+        $this->spots->toggleBookmark((int) $_SESSION['user_id'], $id);
+        $requestedReturn = $_POST['return_to'] ?? '';
+        $allowedReturns = ['/explore', '/profile', '/spot/details/' . $id];
+        $returnTo = is_string($requestedReturn) && in_array($requestedReturn, $allowedReturns, true)
+            ? $requestedReturn
+            : '/explore';
+        $this->redirect($returnTo);
     }
 
     public function profile(): void

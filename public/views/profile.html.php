@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
-    <link rel="stylesheet" href="/css/style.css?v=profile-delete-1">
+    <link rel="stylesheet" href="/css/style.css?v=profile-bookmarks-1">
     <style>
         .profile-avatar{width:8rem;height:8rem;object-fit:cover;border-radius:50%;border:4px solid var(--color-surface);box-shadow:var(--shadow-card)}
         .profile-avatar-trigger{display:block;border:0;border-radius:50%;padding:0;background:transparent;cursor:pointer;line-height:0}
@@ -51,6 +51,25 @@
                 <form class="profile-spot-delete" action="/spot/delete/<?= (int) $spot->getId() ?>" method="post" onsubmit="return confirm('Czy na pewno chcesz usunąć ten spot? Tej operacji nie można cofnąć.');">
                     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                     <button class="spot-delete-icon" type="submit" aria-label="Delete spot: <?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>" title="Delete spot"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m3 0-.9 14H5.9L5 6m4 4v6m6-6v6"/></svg></button>
+                </form>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <section class="profile-saved-spots" aria-labelledby="saved-spots-heading" style="margin-bottom:var(--space-4)">
+        <header class="feed-header"><div><h2 id="saved-spots-heading" style="margin:0">Saved spots (<?= count($bookmarkedSpots) ?>)</h2><p class="text-muted">Lokacje, które zapisałeś na później.</p></div></header>
+        <?php if ($bookmarkedSpots === []): ?><p class="content-card text-muted">Nie masz jeszcze zapisanych spotów. Użyj ikony zakładki na kafelku lub stronie spotu.</p><?php endif; ?>
+        <div class="spots-grid profile-spots">
+            <?php foreach ($bookmarkedSpots as $spot): ?>
+                <?php $imagePath = $spot->getImagePath(); ?>
+                <article class="spot-card"><a href="/spot/details/<?= (int) $spot->getId() ?>" class="spot-card-link">
+                    <div class="spot-card-visual<?= $imagePath !== null ? ' has-image' : '' ?>"<?php if ($imagePath !== null): ?> style="background-image:url('<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>')"<?php endif; ?>><?php if ($spot->getCategory() !== null): ?><ul class="tag-list"><li class="badge"><?= htmlspecialchars($spot->getCategory(), ENT_QUOTES, 'UTF-8') ?></li></ul><?php endif; ?></div>
+                    <div class="spot-card-body"><div class="spot-card-title-row"><h3 class="spot-title-link"><?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?></h3></div><p class="spot-meta"><?= htmlspecialchars($spot->getAuthorName() ?? 'Użytkownik', ENT_QUOTES, 'UTF-8') ?></p><footer class="spot-card-footer"><span class="light-tag">Szczegóły</span><span class="details-link">Otwórz →</span></footer></div>
+                </a>
+                <form class="spot-bookmark-form" action="/spot/bookmark/<?= (int) $spot->getId() ?>" method="post">
+                    <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                    <input type="hidden" name="return_to" value="/profile">
+                    <button class="spot-bookmark-button is-bookmarked" type="submit" aria-label="Usuń zakładkę: <?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>" aria-pressed="true" title="Usuń z zapisanych"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.75h12v16.5l-6-4-6 4z"/></svg></button>
                 </form>
                 </article>
             <?php endforeach; ?>

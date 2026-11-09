@@ -41,6 +41,7 @@ $routing->get('/explore', SpotController::class, 'explore');
 $routing->get('/spot/add', SpotController::class, 'add');
 $routing->post('/spot/add', SpotController::class, 'add');
 $routing->post('/spot/delete/{id}', SpotController::class, 'delete');
+$routing->post('/spot/bookmark/{id}', SpotController::class, 'toggleBookmark');
 $routing->get('/spot/details/{id}', SpotController::class, 'details');
 $routing->get('/profile', $profileController, 'index');
 $routing->post('/profile/avatar', $profileController, 'uploadAvatar');

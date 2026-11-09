@@ -30,6 +30,7 @@ final class ProfileController extends AppController
             'pageTitle' => $user->getName() . ' | SpotScout',
             'user' => $user,
             'spots' => $this->spots->findByUserId($userId),
+            'bookmarkedSpots' => $this->spots->findBookmarkedByUserId($userId),
             'csrfToken' => $this->csrfToken(),
             'errors' => [],
         ]);
@@ -64,6 +65,7 @@ final class ProfileController extends AppController
             'pageTitle' => $user->getName() . ' | SpotScout',
             'user' => $user,
             'spots' => $this->spots->findByUserId($userId),
+            'bookmarkedSpots' => $this->spots->findBookmarkedByUserId($userId),
             'csrfToken' => $this->csrfToken(),
             'errors' => $errors,
         ]);
