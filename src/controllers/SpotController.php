@@ -47,13 +47,19 @@ final class SpotController extends AppController
             }
 
             $title = trim(is_string($_POST['title'] ?? null) ? $_POST['title'] : '');
-            $category = trim(is_string($_POST['category'] ?? null) ? $_POST['category'] : '');
+            $submittedCategories = $_POST['categories'] ?? [];
+            $categories = is_array($submittedCategories)
+                ? array_values(array_unique(array_filter($submittedCategories, 'is_string')))
+                : [];
             $latitudeInput = is_string($_POST['latitude'] ?? null) ? $_POST['latitude'] : '';
             $longitudeInput = is_string($_POST['longitude'] ?? null) ? $_POST['longitude'] : '';
             $latitude = filter_var($latitudeInput, FILTER_VALIDATE_FLOAT);
             $longitude = filter_var($longitudeInput, FILTER_VALIDATE_FLOAT);
             if ($title === '' || mb_strlen($title) > 150) $errors[] = 'Podaj tytuł (maksymalnie 150 znaków).';
-            if (!in_array($category, ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night'], true)) $errors[] = 'Wybierz prawidłową kategorię.';
+            $allowedCategories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night'];
+            if ($categories === [] || count($categories) > count($allowedCategories) || array_diff($categories, $allowedCategories) !== []) {
+                $errors[] = 'Wybierz co najmniej jedną prawidłową kategorię.';
+            }
             if ($latitude === false || $latitude < -90 || $latitude > 90 || $longitude === false || $longitude < -180 || $longitude > 180) $errors[] = 'Wskaż prawidłową lokalizację na mapie.';
 
             $imagePaths = [];
@@ -66,7 +72,8 @@ final class SpotController extends AppController
             }
 
             if ($errors === []) {
-                $spotId = $this->spots->save(new SpotInputDTO($title, null, 'active', (float) $latitude, (float) $longitude, $category, $imagePaths[0], (int) $_SESSION['user_id']));
+                $categoryJson = json_encode($categories, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+                $spotId = $this->spots->save(new SpotInputDTO($title, null, 'active', (float) $latitude, (float) $longitude, $categoryJson, $imagePaths[0], (int) $_SESSION['user_id']));
                 $this->spots->saveAdditionalImages($spotId, array_slice($imagePaths, 1));
                 $this->redirect('/explore');
             }
@@ -92,7 +99,46 @@ final class SpotController extends AppController
             'pageTitle' => $spot->getTitle() . ' | SpotScout',
             'spot' => $spot,
             'images' => $this->spots->findImagePaths($id, $spot->getImagePath()),
+            'currentUserId' => isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null,
+            'csrfToken' => $this->csrfToken(),
         ]);
+    }
+
+    public function delete(int $id): void
+    {
+        $this->requireLogin();
+
+        $token = is_string($_POST['_csrf_token'] ?? null) ? $_POST['_csrf_token'] : '';
+        if (!$this->isPost() || !$this->isCsrfTokenValid($token)) {
+            http_response_code(403);
+            return;
+        }
+
+        $userId = (int) $_SESSION['user_id'];
+        $spot = $this->spots->find($id);
+        if ($spot === null || $spot->getUserId() !== $userId) {
+            http_response_code(404);
+            return;
+        }
+
+        $imagePaths = $this->spots->findImagePaths($id, $spot->getImagePath());
+        if (!$this->spots->deleteOwnedByUser($id, $userId)) {
+            http_response_code(404);
+            return;
+        }
+
+        $uploadsDirectory = dirname(__DIR__, 2) . '/public/uploads/spots/';
+        foreach ($imagePaths as $imagePath) {
+            $relativePath = substr($imagePath, strlen('/uploads/spots/'));
+            if (str_starts_with($imagePath, '/uploads/spots/') && $relativePath !== '' && basename($relativePath) === $relativePath) {
+                $filePath = $uploadsDirectory . $relativePath;
+                if (is_file($filePath)) {
+                    @unlink($filePath);
+                }
+            }
+        }
+
+        $this->redirect('/explore');
     }
 
     public function profile(): void

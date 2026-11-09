@@ -7,7 +7,7 @@
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="/css/style.css">
-    <style>#spot-map{height:340px;border:1px solid var(--color-border);border-radius:var(--radius)}.upload-dropzone input{width:100%;color:var(--color-text)}.form-error{color:#b42318}</style>
+    <style>#spot-map{height:340px;border:1px solid var(--color-border);border-radius:var(--radius)}.upload-dropzone input{width:100%;color:var(--color-text)}.form-error{color:#b42318}.category-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.65rem}.category-option{display:flex;align-items:center;gap:.55rem;padding:.7rem .85rem;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface-alt)}.category-option input{accent-color:var(--color-brand)}</style>
 </head>
 <body>
 <?php require __DIR__ . '/partials/header.html.php'; ?>
@@ -19,8 +19,8 @@
         <section class="content-card form-stack" aria-labelledby="spot-info-heading">
             <h2 id="spot-info-heading">Informacje o miejscu</h2>
             <div class="form-group"><label for="title" class="form-label-row">Nazwa spotu</label><input class="form-input" type="text" id="title" name="title" maxlength="150" placeholder="np. Stara hala elektrowni" required></div>
-            <div class="form-group"><label for="category" class="form-label-row">Kategoria</label><select class="form-select" id="category" name="category" required><option value="">Wybierz kategorię</option><?php foreach ($categories as $category): ?><option value="<?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?></select></div>
-            <div class="form-group"><label for="image" class="form-label-row">Zdjęcia miejsca <span class="form-hint">JPEG lub PNG, maksymalnie 5 zdjęć po 5 MB</span></label><div class="upload-dropzone"><input type="file" id="image" name="image[]" accept="image/jpeg,image/png" multiple required></div></div>
+            <fieldset class="form-group" style="border:0;padding:0;margin:0"><legend class="form-label-row">Kategorie <span class="form-hint">Możesz wybrać kilka</span></legend><div class="category-options"><?php foreach ($categories as $category): ?><label class="category-option"><input type="checkbox" name="categories[]" value="<?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?>"><span><?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?></span></label><?php endforeach; ?></div></fieldset>
+            <div class="form-group"><label for="image" class="form-label-row">Zdjęcia miejsca <span class="form-hint">JPEG lub PNG, od 1 do 5 zdjęć po maksymalnie 5 MB</span></label><div class="upload-dropzone"><input type="file" id="image" name="image[]" accept="image/jpeg,image/png" multiple required></div></div>
         </section>
         <section class="content-card form-stack" aria-labelledby="coordinates-heading">
             <div class="form-row-between"><h2 id="coordinates-heading">Lokalizacja na mapie</h2><span class="badge">Wymagane</span></div>

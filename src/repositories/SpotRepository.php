@@ -118,6 +118,14 @@ final class SpotRepository
         $statement->execute(['id' => $id]);
     }
 
+    public function deleteOwnedByUser(int $spotId, int $userId): bool
+    {
+        $statement = $this->database->prepare('DELETE FROM spots WHERE id = :id AND user_id = :user_id');
+        $statement->execute(['id' => $spotId, 'user_id' => $userId]);
+
+        return $statement->rowCount() === 1;
+    }
+
     /** @param array<string, mixed> $row */
     private function mapRowToSpot(array $row): Spot
     {

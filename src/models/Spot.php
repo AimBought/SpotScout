@@ -26,8 +26,22 @@ final class Spot
     public function setLatitude(?float $value): void { $this->latitude = $value; }
     public function getLongitude(): ?float { return $this->longitude; }
     public function setLongitude(?float $value): void { $this->longitude = $value; }
-    public function getCategory(): ?string { return $this->category; }
+    public function getCategory(): ?string
+    {
+        $categories = $this->getCategories();
+        return $categories === [] ? null : implode(' · ', $categories);
+    }
     public function setCategory(?string $value): void { $this->category = $value; }
+    /** @return array<int, string> */
+    public function getCategories(): array
+    {
+        if ($this->category === null || $this->category === '') return [];
+        $decoded = json_decode($this->category, true);
+        if (is_array($decoded)) {
+            return array_values(array_filter($decoded, 'is_string'));
+        }
+        return [$this->category];
+    }
     public function getImagePath(): ?string { return $this->image_path; }
     public function setImagePath(?string $value): void { $this->image_path = $value; }
     public function getUserId(): ?int { return $this->userId; }
