@@ -6,7 +6,7 @@
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=spot-search-3">
     <style>
         #explore-map{height:380px;border:1px solid var(--color-border);border-radius:var(--radius);margin-block:var(--space-2)}
         .spot-card-link{display:flex;flex-direction:column;height:100%;color:inherit}
@@ -32,9 +32,10 @@
         </section>
         <section class="spots-grid" aria-label="Lista spotów">
             <?php if ($spots === []): ?><p class="empty-spots">Nie dodano jeszcze żadnych spotów. Dodaj pierwszy i podziel się lokalizacją.</p><?php endif; ?>
+            <p class="empty-spots" id="spot-search-empty" role="status" hidden>Nie znaleziono spotów spełniających wybrane kryteria.</p>
             <?php foreach ($spots as $spot): ?>
                 <?php $imagePath = $spot->getImagePath(); ?>
-                <article class="spot-card">
+                <article class="spot-card" data-spot-id="<?= (int) $spot->getId() ?>">
                     <a class="spot-card-link" href="/spot/details/<?= (int) $spot->getId() ?>">
                         <div class="spot-card-visual<?= $imagePath !== null ? ' has-image' : '' ?>"<?php if ($imagePath !== null): ?> style="background-image: url('<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>')"<?php endif; ?>>
                             <?php if ($spot->getCategory() !== null): ?><ul class="tag-list"><li class="badge"><?= htmlspecialchars($spot->getCategory(), ENT_QUOTES, 'UTF-8') ?></li></ul><?php endif; ?>
@@ -55,11 +56,13 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/js/theme.js" defer></script>
 <script>
-const spots = <?= json_encode(array_map(static fn ($spot): array => ['id' => $spot->getId(), 'title' => $spot->getTitle(), 'latitude' => $spot->getLatitude(), 'longitude' => $spot->getLongitude()], array_filter($spots, static fn ($spot): bool => $spot->getLatitude() !== null && $spot->getLongitude() !== null)), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_THROW_ON_ERROR) ?>;
+const spots = <?= json_encode(array_map(static fn ($spot): array => ['id' => $spot->getId(), 'title' => $spot->getTitle(), 'categories' => $spot->getCategories(), 'latitude' => $spot->getLatitude(), 'longitude' => $spot->getLongitude()], $spots), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_THROW_ON_ERROR) ?>;
 const map = L.map('explore-map').setView([52.1, 19.4], 6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap'}).addTo(map);
-spots.forEach(spot => { const popup = document.createElement('a'); popup.href = `/spot/details/${spot.id}`; popup.textContent = spot.title; L.marker([spot.latitude, spot.longitude]).addTo(map).bindPopup(popup); });
-if (spots.length) map.fitBounds(spots.map(spot => [spot.latitude, spot.longitude]), {padding: [24, 24]});
+const markers = new Map();
+spots.filter(spot => spot.latitude !== null && spot.longitude !== null).forEach(spot => { const popup = document.createElement('a'); popup.href = `/spot/details/${spot.id}`; popup.textContent = spot.title; markers.set(String(spot.id), L.marker([spot.latitude, spot.longitude]).bindPopup(popup)); });
+window.spotScoutExplore = { spots, map, markers };
+if (markers.size) map.fitBounds([...markers.values()].map(marker => marker.getLatLng()), {padding: [24, 24]});
 </script>
 </body>
 </html>

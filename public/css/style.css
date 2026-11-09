@@ -1204,6 +1204,18 @@ html[data-theme="dark"] .theme-toggle-thumb {
 .spot-delete-icon { display: grid; width: 2.65rem; height: 2.65rem; place-items: center; border: 1px solid #fda29b; border-radius: 50%; background: #fff1f0; color: #b42318; cursor: pointer; box-shadow: 0 3px 12px rgba(15,23,42,.2); transition: background-color .15s ease, color .15s ease, transform .15s ease; }
 .spot-delete-icon:hover { transform: translateY(-1px); background: #b42318; color: #fff; }
 .spot-delete-icon:focus-visible { outline: 3px solid #fda29b; outline-offset: 2px; }
+.search-form { position: relative; align-items: center; }
+.search-filter { position: relative; flex: 0 0 auto; }
+.search-filter-button { display: grid; width: 2.7rem; height: 2.7rem; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); color: var(--color-muted); cursor: pointer; list-style: none; }
+.search-filter-button::-webkit-details-marker { display: none; }
+.search-filter[open] .search-filter-button, .search-filter-button:hover { border-color: var(--color-brand); color: var(--color-brand); }
+.search-filter-menu { position: absolute; z-index: 50; top: calc(100% + .6rem); right: 0; display: grid; min-width: 13rem; gap: .2rem; padding: .85rem; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-card); }
+.search-filter-menu strong { padding: .25rem .45rem .5rem; font-size: .88rem; }
+.search-filter-menu label { display: flex; align-items: center; gap: .55rem; padding: .4rem .45rem; border-radius: var(--radius-sm); cursor: pointer; }
+.search-filter-menu label:hover { background: var(--color-surface-alt); }
+.search-filter-menu input { accent-color: var(--color-brand); }
+.spots-grid [hidden] { display: none !important; }
+.site-header.has-open-search-filter { z-index: 1000; margin-bottom: 0; }
 .split-auth-main { width: min(100%, 30rem); }
 .split-auth-main .auth-header { margin-bottom: 1.75rem; text-align: left; }
 .split-auth-main .auth-header h1 { font-size: clamp(2rem, 4vw, 3rem); }
