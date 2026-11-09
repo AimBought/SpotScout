@@ -6,3 +6,5 @@ vendor/
 node_modules/
 docker/data/
 /vendor/
+/public/uploads/*
+!/public/uploads/.gitkeep

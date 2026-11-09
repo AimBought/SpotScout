@@ -1191,6 +1191,19 @@ html[data-theme="dark"] .theme-toggle-thumb {
 .spot-overlay-eyebrow { display: block; margin-bottom: .5rem; color: #2563eb; font-size: .72rem; font-weight: 800; letter-spacing: .12em; }
 .spot-overlay-card h2 { margin-bottom: .45rem; color: var(--color-text); font-size: clamp(1.25rem, 2vw, 1.7rem); }
 .spot-overlay-card p { margin-bottom: 1rem; color: var(--color-muted); }
+.btn-danger { border: 1px solid #fda29b; background: #fff1f0; color: #b42318; }
+.btn-danger:hover { border-color: #b42318; background: #b42318; color: #fff; }
+.spot-delete-form { display: flex; justify-content: flex-end; margin-bottom: var(--space-2); }
+.spot-delete-button { display: inline-flex; align-items: center; gap: .5rem; }
+.spot-delete-button::before { content: ""; width: 1.1rem; height: 1.1rem; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18M8 6V4h8v2m3 0-.9 14H5.9L5 6m4 4v6m6-6v6'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18M8 6V4h8v2m3 0-.9 14H5.9L5 6m4 4v6m6-6v6'/%3E%3C/svg%3E") center / contain no-repeat; }
+.details-layout form[action^="/spot/delete/"] { display: flex; justify-content: flex-end; }
+.details-layout form[action^="/spot/delete/"] .btn-danger { display: inline-flex; align-items: center; gap: .5rem; }
+.details-layout form[action^="/spot/delete/"] .btn-danger::before { content: ""; width: 1.1rem; height: 1.1rem; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18M8 6V4h8v2m3 0-.9 14H5.9L5 6m4 4v6m6-6v6'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18M8 6V4h8v2m3 0-.9 14H5.9L5 6m4 4v6m6-6v6'/%3E%3C/svg%3E") center / contain no-repeat; }
+.profile-spots .spot-card { position: relative; }
+.profile-spot-delete { position: absolute; z-index: 2; top: .75rem; right: .75rem; margin: 0; }
+.spot-delete-icon { display: grid; width: 2.65rem; height: 2.65rem; place-items: center; border: 1px solid #fda29b; border-radius: 50%; background: #fff1f0; color: #b42318; cursor: pointer; box-shadow: 0 3px 12px rgba(15,23,42,.2); transition: background-color .15s ease, color .15s ease, transform .15s ease; }
+.spot-delete-icon:hover { transform: translateY(-1px); background: #b42318; color: #fff; }
+.spot-delete-icon:focus-visible { outline: 3px solid #fda29b; outline-offset: 2px; }
 .split-auth-main { width: min(100%, 30rem); }
 .split-auth-main .auth-header { margin-bottom: 1.75rem; text-align: left; }
 .split-auth-main .auth-header h1 { font-size: clamp(2rem, 4vw, 3rem); }
