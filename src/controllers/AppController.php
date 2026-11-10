@@ -30,6 +30,25 @@ abstract class AppController
         }
     }
 
+    /** @param string|array<int, string> $roles */
+    protected function hasRole(string|array $roles): bool
+    {
+        $allowedRoles = is_array($roles) ? $roles : [$roles];
+        $userRole = $_SESSION['user_role'] ?? null;
+
+        return is_string($userRole) && in_array($userRole, $allowedRoles, true);
+    }
+
+    /** @param string|array<int, string> $roles */
+    protected function requireRole(string|array $roles): void
+    {
+        $this->requireLogin();
+        if (!$this->hasRole($roles)) {
+            http_response_code(403);
+            exit('Forbidden');
+        }
+    }
+
     protected function csrfToken(): string
     {
         if (!isset($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {

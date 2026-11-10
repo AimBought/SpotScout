@@ -107,6 +107,17 @@
         }
         .profile-pill:hover { border-color: var(--color-brand); color: var(--color-brand); }
         .logout-link { min-height: 2.75rem; white-space: nowrap; }
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid color-mix(in srgb, var(--color-brand) 35%, var(--color-border));
+            border-radius: var(--radius-pill);
+            padding: .2rem .55rem;
+            color: var(--color-brand);
+            font-size: .75rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
 
         /* Responsywny layout nagłówka (Mobile-First) */
         html, body {
@@ -146,7 +157,7 @@
     </style>
 
     <div class="page header-inner">
-        <a href="/" class="brand-logo">
+        <a href="<?= isset($_SESSION['user_id']) ? '/explore' : '/' ?>" class="brand-logo">
             SpotScout <span class="brand-dot" aria-hidden="true"></span>
         </a>
 
@@ -182,9 +193,8 @@
         <nav class="desktop-nav" aria-label="Main navigation">
             <ul class="nav-list">
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <li><a href="/explore" aria-current="page" class="nav-link active-link">Explore</a></li>
                     <li><a href="/spot/add" class="btn btn-primary">+ New Spot</a></li>
-                    <li><a href="/profile" class="profile-pill profile-link"><img class="header-avatar" src="<?= htmlspecialchars((string) ($_SESSION['user_avatar_path'] ?? '/images/default-avatar.svg'), ENT_QUOTES, 'UTF-8') ?>" alt="" width="32" height="32"><span><?= htmlspecialchars((string) ($_SESSION['user_name'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span></a></li>
+                    <li><a href="/profile" class="profile-pill profile-link"><img class="header-avatar" src="<?= htmlspecialchars((string) ($_SESSION['user_avatar_path'] ?? '/images/default-avatar.svg'), ENT_QUOTES, 'UTF-8') ?>" alt="" width="32" height="32"><span><?= htmlspecialchars((string) ($_SESSION['user_name'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span><?php if (in_array($_SESSION['user_role'] ?? null, ['moderator', 'admin'], true)): ?><span class="role-badge"><?= htmlspecialchars((string) $_SESSION['user_role'] === 'admin' ? 'Admin' : 'Moderator', ENT_QUOTES, 'UTF-8') ?></span><?php endif; ?></a></li>
                     <li>
                         <form action="/logout" method="post" class="logout-form">
                             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">

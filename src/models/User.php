@@ -11,6 +11,7 @@ final class User
         private string $name,
         private string $email,
         private ?string $avatarPath = null,
+        private string $role = 'user',
     ) {
     }
 
@@ -18,5 +19,6 @@ final class User
     public function getName(): string { return $this->name; }
     public function getEmail(): string { return $this->email; }
     public function getAvatarPath(): ?string { return $this->avatarPath; }
+    public function getRole(): string { return $this->role; }
     public function setAvatarPath(?string $avatarPath): void { $this->avatarPath = $avatarPath; }
 }

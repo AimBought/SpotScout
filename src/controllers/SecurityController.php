@@ -53,6 +53,7 @@ final class SecurityController extends AppController
                     $_SESSION['user_id'] = (int) $user['id'];
                     $_SESSION['user_name'] = $user['name'];
                     $_SESSION['user_avatar_path'] = $user['avatar_path'] ?? null;
+                    $_SESSION['user_role'] = $user['role'];
                     unset($_SESSION['csrf_token']);
                     $this->csrfToken();
                     $this->redirect('/explore');

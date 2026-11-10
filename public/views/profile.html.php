@@ -10,6 +10,7 @@
         .profile-avatar{width:8rem;height:8rem;object-fit:cover;border-radius:50%;border:4px solid var(--color-surface);box-shadow:var(--shadow-card)}
         .profile-avatar-trigger{display:block;border:0;border-radius:50%;padding:0;background:transparent;cursor:pointer;line-height:0}
         .profile-avatar-trigger:focus-visible{outline:3px solid var(--color-brand);outline-offset:4px}
+        .profile-panel-links{display:flex;align-items:center;justify-content:flex-end;gap:.65rem;flex-wrap:wrap}
         .profile-alert{padding:var(--space-2);border-radius:var(--radius-sm);background:var(--color-surface);border:1px solid var(--color-border);margin-bottom:var(--space-2)}
         .profile-spots .spot-card-link{display:flex;flex-direction:column;height:100%;color:inherit}
         .profile-spots .spot-card-visual.has-image{background-size:cover;background-position:center;min-height:13rem}
@@ -34,6 +35,10 @@
                     <img class="profile-avatar" src="<?= htmlspecialchars($user->getAvatarPath() ?? '/images/default-avatar.svg', ENT_QUOTES, 'UTF-8') ?>" alt="Awatar użytkownika <?= htmlspecialchars($user->getName(), ENT_QUOTES, 'UTF-8') ?>" width="128" height="128">
                 </button>
                 <div><h1 id="profile-name" style="margin-bottom:.15rem"><?= htmlspecialchars($user->getName(), ENT_QUOTES, 'UTF-8') ?></h1><p class="text-muted" style="margin:0"><?= htmlspecialchars($user->getEmail(), ENT_QUOTES, 'UTF-8') ?></p></div>
+            </div>
+            <div class="profile-panel-links">
+                <?php if (($_SESSION['user_role'] ?? null) === 'admin'): ?><a class="btn btn-outline" href="/admin">Admin Panel</a><?php endif; ?>
+                <?php if (($_SESSION['user_role'] ?? null) === 'moderator'): ?><a class="btn btn-outline" href="/moderator">Moderator Panel</a><?php endif; ?>
             </div>
         </div>
         <p class="text-muted">Kliknij zdjęcie profilowe, aby wybrać i wykadrować nowy awatar.</p>
