@@ -119,15 +119,23 @@ final class SpotController extends AppController
 
         $userId = (int) $_SESSION['user_id'];
         $spot = $this->spots->find($id);
-        if ($spot === null || $spot->getUserId() !== $userId) {
+        if ($spot === null) {
             http_response_code(404);
+            return;
+        }
+        if ($spot->getUserId() !== $userId && !$this->hasRole(['admin', 'moderator'])) {
+            http_response_code(403);
             return;
         }
 
         $imagePaths = $this->spots->findImagePaths($id, $spot->getImagePath());
-        if (!$this->spots->deleteOwnedByUser($id, $userId)) {
-            http_response_code(404);
-            return;
+        if ($spot->getUserId() === $userId) {
+            if (!$this->spots->deleteOwnedByUser($id, $userId)) {
+                http_response_code(404);
+                return;
+            }
+        } else {
+            $this->spots->delete($id);
         }
 
         $uploadsDirectory = dirname(__DIR__, 2) . '/public/uploads/spots/';

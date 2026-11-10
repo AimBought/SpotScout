@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Controller\DefaultController;
+use App\Controller\AdminController;
+use App\Controller\ModeratorController;
 use App\Controller\ProfileController;
 use App\Controller\SecurityController;
 use App\Controller\SpotController;
@@ -26,6 +28,8 @@ $routing = new Routing();
 $userRepository = new UserRepository((new Database())->connect());
 $spotRepository = new SpotRepository((new Database())->connect());
 $profileController = new ProfileController($userRepository, $spotRepository);
+$adminController = new AdminController($userRepository);
+$moderatorController = new ModeratorController();
 $mailService = new MailService();
 $securityController = new SecurityController($userRepository, $mailService, $spotRepository);
 $defaultController = new DefaultController($spotRepository);
@@ -45,6 +49,10 @@ $routing->post('/spot/bookmark/{id}', SpotController::class, 'toggleBookmark');
 $routing->get('/spot/details/{id}', SpotController::class, 'details');
 $routing->get('/profile', $profileController, 'index');
 $routing->post('/profile/avatar', $profileController, 'uploadAvatar');
+$routing->get('/admin', $adminController, 'index');
+$routing->get('/admin/moderator', $adminController, 'moderatorTab');
+$routing->post('/admin/role', $adminController, 'changeRole');
+$routing->get('/moderator', $moderatorController, 'index');
 
 $routeFound = $routing->dispatch(
     $_SERVER['REQUEST_METHOD'],
