@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Database;
+use App\Repository\NotificationRepository;
+
 /**
  * Bazowy kontroler aplikacji SpotScout.
  *
@@ -79,6 +82,18 @@ abstract class AppController
      */
     protected function render(string $template, array $variables = []): void
     {
+        $variables['csrfToken'] ??= $this->csrfToken();
+        if (!array_key_exists('unreadNotifications', $variables)) {
+            $variables['unreadNotifications'] = [];
+            $variables['unreadNotificationCount'] = 0;
+            if (isset($_SESSION['user_id'])) {
+                $notificationRepository = new NotificationRepository((new Database())->connect());
+                $userId = (int) $_SESSION['user_id'];
+                $variables['unreadNotifications'] = $notificationRepository->findUnreadByUserId($userId);
+                $variables['unreadNotificationCount'] = $notificationRepository->countUnreadByUserId($userId);
+            }
+        }
+
         $templatePath = dirname(__DIR__, 2) . '/public/views/' . $template . '.html.php';
 
         if (!is_file($templatePath)) {

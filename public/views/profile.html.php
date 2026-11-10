@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
-    <link rel="stylesheet" href="/css/style.css?v=profile-bookmarks-1">
+    <link rel="stylesheet" href="/css/style.css?v=spot-rejection-overflow-2">
     <style>
         .profile-avatar{width:8rem;height:8rem;object-fit:cover;border-radius:50%;border:4px solid var(--color-surface);box-shadow:var(--shadow-card)}
         .profile-avatar-trigger{display:block;border:0;border-radius:50%;padding:0;background:transparent;cursor:pointer;line-height:0}
@@ -53,6 +53,8 @@
                     <div class="spot-card-visual<?= $imagePath !== null ? ' has-image' : '' ?>"<?php if ($imagePath !== null): ?> style="background-image:url('<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>')"<?php endif; ?>><?php if ($spot->getCategory() !== null): ?><ul class="tag-list"><li class="badge"><?= htmlspecialchars($spot->getCategory(), ENT_QUOTES, 'UTF-8') ?></li></ul><?php endif; ?></div>
                     <div class="spot-card-body"><div class="spot-card-title-row"><h3 class="spot-title-link"><?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?></h3></div><p class="spot-meta"><?php if ($spot->getLatitude() !== null && $spot->getLongitude() !== null): ?><?= htmlspecialchars(number_format($spot->getLatitude(), 5, '.', '') . ', ' . number_format($spot->getLongitude(), 5, '.', ''), ENT_QUOTES, 'UTF-8') ?><?php else: ?>Brak współrzędnych<?php endif; ?></p><footer class="spot-card-footer"><span class="light-tag">Zobacz szczegóły</span><span class="details-link">Otwórz →</span></footer></div>
                 </a>
+                <?php if ($spot->getStatus() === 'pending'): ?><p class="spot-status-badge status-pending">Oczekuje na weryfikację</p><?php elseif ($spot->getStatus() === 'rejected'): ?><p class="spot-status-badge status-rejected">Odrzucony</p><?php elseif ($spot->getStatus() === 'approved'): ?><p class="spot-status-badge status-approved">Zatwierdzony</p><?php endif; ?>
+                <?php if ($spot->getStatus() === 'rejected' && $spot->getRejectionReason() !== null): ?><p class="spot-rejection-reason profile-spot-reason"><strong>Powód:</strong> <?= htmlspecialchars($spot->getRejectionReason(), ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
                 <form class="profile-spot-delete" action="/spot/delete/<?= (int) $spot->getId() ?>" method="post" onsubmit="return confirm('Czy na pewno chcesz usunąć ten spot? Tej operacji nie można cofnąć.');">
                     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                     <button class="spot-delete-icon" type="submit" aria-label="Delete spot: <?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>" title="Delete spot"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m3 0-.9 14H5.9L5 6m4 4v6m6-6v6"/></svg></button>

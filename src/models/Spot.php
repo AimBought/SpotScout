@@ -11,7 +11,8 @@ final class Spot
     private ?int $id = null;
     private string $title = '';
     private ?string $description = null;
-    private string $status = 'active';
+    private string $status = 'pending';
+    private ?string $rejectionReason = null;
     private ?DateTimeImmutable $createdAt = null;
     private ?DateTimeImmutable $updatedAt = null;
     private ?float $latitude = null;
@@ -104,6 +105,16 @@ final class Spot
     public function setStatus(string $status): void
     {
         $this->status = $status;
+    }
+
+    public function getRejectionReason(): ?string
+    {
+        return $this->rejectionReason;
+    }
+
+    public function setRejectionReason(?string $rejectionReason): void
+    {
+        $this->rejectionReason = $rejectionReason;
     }
 
     public function getCreatedAt(): ?DateTimeImmutable
