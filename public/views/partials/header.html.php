@@ -118,6 +118,19 @@
             font-weight: 700;
             line-height: 1.2;
         }
+        .notification-menu { position: relative; }
+        .notification-trigger { position: relative; display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); color: var(--color-text); cursor: pointer; list-style: none; }
+        .notification-trigger::-webkit-details-marker { display: none; }
+        .notification-trigger:hover { border-color: var(--color-brand); color: var(--color-brand); }
+        .notification-count { position: absolute; top: -.2rem; right: -.25rem; min-width: 1.2rem; height: 1.2rem; display: grid; place-items: center; padding: 0 .2rem; border: 2px solid var(--color-surface); border-radius: 999px; background: #dc2626; color: #fff; font-size: .68rem; font-weight: 800; line-height: 1; }
+        .notification-popover { position: absolute; z-index: 1000; top: calc(100% + .65rem); right: 0; width: min(22rem, calc(100vw - 2rem)); max-height: min(24rem, calc(100vh - 6rem)); overflow-y: auto; overscroll-behavior: contain; padding: .9rem; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-card); }
+        .site-header:has(.notification-menu[open]) { z-index: 1000; }
+        .notification-popover h2 { margin: 0 0 .6rem; font-size: 1rem; }
+        .notification-item { overflow-wrap: anywhere; padding: .7rem 0; border-top: 1px solid var(--color-border); font-size: .9rem; line-height: 1.45; }
+        .notification-message { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+        .notification-item time { display: block; margin-top: .25rem; color: var(--color-muted); font-size: .75rem; }
+        .notification-empty { color: var(--color-muted); font-size: .9rem; }
+        .notification-mark-read { width: 100%; margin-top: .5rem; }
 
         /* Responsywny layout nagłówka (Mobile-First) */
         html, body {
@@ -193,6 +206,29 @@
         <nav class="desktop-nav" aria-label="Main navigation">
             <ul class="nav-list">
                 <?php if (isset($_SESSION['user_id'])): ?>
+                    <li>
+                        <details class="notification-menu">
+                            <summary class="notification-trigger" aria-label="Powiadomienia" title="Powiadomienia">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+                                <?php if ($unreadNotificationCount > 0): ?><span class="notification-count"><?= $unreadNotificationCount > 99 ? '99+' : $unreadNotificationCount ?></span><?php endif; ?>
+                            </summary>
+                            <div class="notification-popover">
+                                <h2>Powiadomienia</h2>
+                                <?php if ($unreadNotifications === []): ?>
+                                    <p class="notification-empty">Brak nowych powiadomień.</p>
+                                <?php else: ?>
+                                    <?php foreach ($unreadNotifications as $notification): ?><article class="notification-item"><span class="notification-message"><?= htmlspecialchars($notification->getMessage(), ENT_QUOTES, 'UTF-8') ?></span><time datetime="<?= htmlspecialchars($notification->getCreatedAt()->format(DATE_ATOM), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($notification->getCreatedAt()->format('d.m.Y H:i'), ENT_QUOTES, 'UTF-8') ?></time></article><?php endforeach; ?>
+                                    <?php $notificationReturnTo = is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '/explore'; ?>
+                                    <form action="/notifications/read" method="post">
+                                        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                                        <input type="hidden" name="return_to" value="<?= htmlspecialchars($notificationReturnTo, ENT_QUOTES, 'UTF-8') ?>">
+                                        <?php foreach ($unreadNotifications as $notification): ?><input type="hidden" name="notification_ids[]" value="<?= $notification->getId() ?>"><?php endforeach; ?>
+                                        <button class="btn btn-outline notification-mark-read" type="submit">Oznacz jako przeczytane</button>
+                                    </form>
+                                <?php endif; ?>
+                            </div>
+                        </details>
+                    </li>
                     <li><a href="/spot/add" class="btn btn-primary">+ New Spot</a></li>
                     <li><a href="/profile" class="profile-pill profile-link"><img class="header-avatar" src="<?= htmlspecialchars((string) ($_SESSION['user_avatar_path'] ?? '/images/default-avatar.svg'), ENT_QUOTES, 'UTF-8') ?>" alt="" width="32" height="32"><span><?= htmlspecialchars((string) ($_SESSION['user_name'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span><?php if (in_array($_SESSION['user_role'] ?? null, ['moderator', 'admin'], true)): ?><span class="role-badge"><?= htmlspecialchars((string) $_SESSION['user_role'] === 'admin' ? 'Admin' : 'Moderator', ENT_QUOTES, 'UTF-8') ?></span><?php endif; ?></a></li>
                     <li>

@@ -19,7 +19,7 @@ final class SpotRepository
     public function findAll(): array
     {
         $statement = $this->database->prepare(
-            'SELECT s.id, s.title, s.description, s.status, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id ORDER BY s.id'
+            'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = \'approved\' ORDER BY s.id'
         );
         $statement->execute();
 
@@ -29,7 +29,7 @@ final class SpotRepository
     public function find(int $id): ?Spot
     {
         $statement = $this->database->prepare(
-            'SELECT s.id, s.title, s.description, s.status, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.id = :id'
+            'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.id = :id'
         );
         $statement->execute(['id' => $id]);
         $row = $statement->fetch();
@@ -40,7 +40,7 @@ final class SpotRepository
     public function findFeaturedSpot(): ?Spot
     {
         $statement = $this->database->query(
-            'SELECT s.id, s.title, s.description, s.status, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id ORDER BY s.created_at DESC, s.id DESC LIMIT 1'
+            'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = \'approved\' ORDER BY s.created_at DESC, s.id DESC LIMIT 1'
         );
         $row = $statement->fetch();
 
@@ -51,7 +51,7 @@ final class SpotRepository
     public function findByUserId(int $userId): array
     {
         $statement = $this->database->prepare(
-            'SELECT s.id, s.title, s.description, s.status, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.user_id = :user_id ORDER BY s.created_at DESC'
+            'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.user_id = :user_id ORDER BY s.created_at DESC'
         );
         $statement->execute(['user_id' => $userId]);
 
@@ -62,9 +62,9 @@ final class SpotRepository
     public function findBookmarkedByUserId(int $userId): array
     {
         $statement = $this->database->prepare(
-            'SELECT s.id, s.title, s.description, s.status, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path '
+            'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path '
             . 'FROM spot_bookmarks b JOIN spots s ON s.id = b.spot_id LEFT JOIN users u ON u.id = s.user_id '
-            . 'WHERE b.user_id = :user_id ORDER BY b.created_at DESC'
+            . 'WHERE b.user_id = :user_id AND s.status = \'approved\' ORDER BY b.created_at DESC'
         );
         $statement->execute(['user_id' => $userId]);
 
@@ -120,6 +120,38 @@ final class SpotRepository
         ]);
 
         return (int) $statement->fetchColumn();
+    }
+
+    /** @return array<int, Spot> */
+    public function findPendingSpots(?int $excludeUserId = null): array
+    {
+        $query = 'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, s.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = \'pending\'';
+        $parameters = [];
+        if ($excludeUserId !== null) {
+            $query .= ' AND (s.user_id IS NULL OR s.user_id <> :exclude_user_id)';
+            $parameters['exclude_user_id'] = $excludeUserId;
+        }
+        $query .= ' ORDER BY s.created_at ASC';
+        $statement = $this->database->prepare($query);
+        $statement->execute($parameters);
+
+        return array_map(fn (array $row): Spot => $this->mapRowToSpot($row), $statement->fetchAll());
+    }
+
+    public function approve(int $spotId): bool
+    {
+        $statement = $this->database->prepare("UPDATE spots SET status = 'approved', rejection_reason = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = :id AND status = 'pending'");
+        $statement->execute(['id' => $spotId]);
+
+        return $statement->rowCount() === 1;
+    }
+
+    public function reject(int $spotId, string $reason): bool
+    {
+        $statement = $this->database->prepare("UPDATE spots SET status = 'rejected', rejection_reason = :reason, updated_at = CURRENT_TIMESTAMP WHERE id = :id AND status = 'pending'");
+        $statement->execute(['id' => $spotId, 'reason' => $reason]);
+
+        return $statement->rowCount() === 1;
     }
 
     /** @param array<int, string> $imagePaths */
@@ -179,6 +211,7 @@ final class SpotRepository
         $spot->setTitle((string) $row['title']);
         $spot->setDescription($row['description'] === null ? null : (string) $row['description']);
         $spot->setStatus((string) $row['status']);
+        $spot->setRejectionReason(isset($row['rejection_reason']) && $row['rejection_reason'] !== null ? (string) $row['rejection_reason'] : null);
         $spot->setCreatedAt(new DateTimeImmutable((string) $row['created_at']));
         $spot->setUpdatedAt(new DateTimeImmutable((string) $row['updated_at']));
         $spot->setLatitude($row['latitude'] === null ? null : (float) $row['latitude']);

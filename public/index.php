@@ -5,12 +5,15 @@ declare(strict_types=1);
 use App\Controller\DefaultController;
 use App\Controller\AdminController;
 use App\Controller\ModeratorController;
+use App\Controller\ModerationController;
+use App\Controller\NotificationController;
 use App\Controller\ProfileController;
 use App\Controller\SecurityController;
 use App\Controller\SpotController;
 use App\Database;
 use App\Repository\SpotRepository;
 use App\Repository\UserRepository;
+use App\Repository\NotificationRepository;
 use App\Routing;
 use App\Service\MailService;
 
@@ -28,8 +31,11 @@ $routing = new Routing();
 $userRepository = new UserRepository((new Database())->connect());
 $spotRepository = new SpotRepository((new Database())->connect());
 $profileController = new ProfileController($userRepository, $spotRepository);
-$adminController = new AdminController($userRepository);
-$moderatorController = new ModeratorController();
+$notificationRepository = new NotificationRepository((new Database())->connect());
+$adminController = new AdminController($userRepository, $spotRepository, $notificationRepository);
+$moderatorController = new ModeratorController($spotRepository, $notificationRepository);
+$moderationController = new ModerationController($spotRepository, $notificationRepository);
+$notificationController = new NotificationController();
 $mailService = new MailService();
 $securityController = new SecurityController($userRepository, $mailService, $spotRepository);
 $defaultController = new DefaultController($spotRepository);
@@ -53,6 +59,9 @@ $routing->get('/admin', $adminController, 'index');
 $routing->get('/admin/moderator', $adminController, 'moderatorTab');
 $routing->post('/admin/role', $adminController, 'changeRole');
 $routing->get('/moderator', $moderatorController, 'index');
+$routing->post('/moderate/approve', $moderationController, 'approve');
+$routing->post('/moderate/reject', $moderationController, 'reject');
+$routing->post('/notifications/read', $notificationController, 'markRead');
 
 $routeFound = $routing->dispatch(
     $_SERVER['REQUEST_METHOD'],

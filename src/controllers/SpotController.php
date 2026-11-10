@@ -6,16 +6,20 @@ namespace App\Controller;
 
 use App\Database;
 use App\DTO\SpotInputDTO;
+use App\Repository\NotificationRepository;
 use App\Repository\SpotRepository;
 use RuntimeException;
 
 final class SpotController extends AppController
 {
     private SpotRepository $spots;
+    private NotificationRepository $notifications;
 
     public function __construct()
     {
-        $this->spots = new SpotRepository((new Database())->connect());
+        $database = (new Database())->connect();
+        $this->spots = new SpotRepository($database);
+        $this->notifications = new NotificationRepository($database);
     }
 
     public function explore(): void
@@ -75,9 +79,13 @@ final class SpotController extends AppController
 
             if ($errors === []) {
                 $categoryJson = json_encode($categories, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
-                $spotId = $this->spots->save(new SpotInputDTO($title, null, 'active', (float) $latitude, (float) $longitude, $categoryJson, $imagePaths[0], (int) $_SESSION['user_id']));
+                $status = ($_SESSION['user_role'] ?? null) === 'admin' ? 'approved' : 'pending';
+                $spotId = $this->spots->save(new SpotInputDTO($title, null, $status, (float) $latitude, (float) $longitude, $categoryJson, $imagePaths[0], (int) $_SESSION['user_id']));
                 $this->spots->saveAdditionalImages($spotId, array_slice($imagePaths, 1));
-                $this->redirect('/explore');
+                if ($status === 'pending') {
+                    $this->notifications->notifyModeratorsAboutPendingSpot($spotId, $title);
+                }
+                $this->redirect($status === 'approved' ? '/explore' : '/profile?spot=pending');
             }
         }
 
@@ -93,6 +101,12 @@ final class SpotController extends AppController
     {
         $spot = $this->spots->find($id);
         if ($spot === null) {
+            http_response_code(404);
+            $this->render('not-found', ['pageTitle' => 'Spot not found | SpotScout', 'errorMessage' => 'Spot #' . $id . ' does not exist.']);
+            return;
+        }
+        $isOwner = isset($_SESSION['user_id']) && $spot->getUserId() === (int) $_SESSION['user_id'];
+        if ($spot->getStatus() !== 'approved' && !$isOwner && !$this->hasRole(['admin', 'moderator'])) {
             http_response_code(404);
             $this->render('not-found', ['pageTitle' => 'Spot not found | SpotScout', 'errorMessage' => 'Spot #' . $id . ' does not exist.']);
             return;

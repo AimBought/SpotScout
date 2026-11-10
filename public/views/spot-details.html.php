@@ -5,7 +5,7 @@
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="/css/style.css?v=spot-details-4">
+    <link rel="stylesheet" href="/css/style.css?v=spot-rejection-overflow-2">
     <style>.spot-hero-banner.has-image{background-image:linear-gradient(90deg,rgba(15,23,42,.9),rgba(15,23,42,.35)),url('<?= htmlspecialchars($spot->getImagePath() ?? '', ENT_QUOTES, 'UTF-8') ?>');background-size:cover;background-position:center}.spot-hero-banner h1{margin-top:var(--space-1)}.spot-hero-meta{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem}.spot-author{color:#cbd5e1;display:inline-flex;align-items:center;gap:.5rem;line-height:1.4}.spot-created-at{white-space:nowrap;line-height:1.4}.spot-author-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:0 0 32px}.spot-gallery{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:var(--space-2)}.spot-gallery img{width:100%;max-height:32rem;object-fit:contain;border-radius:var(--radius-sm);background:var(--color-background);cursor:zoom-in}.gallery-control{min-width:2.75rem}#spot-location-map{height:360px;border:1px solid var(--color-border);border-radius:var(--radius)}.spot-lightbox{width:100vw;height:100vh;max-width:none;max-height:none;padding:3rem;border:0;background:rgba(3,7,18,.96);color:#fff}.spot-lightbox::backdrop{background:rgba(3,7,18,.96)}.spot-lightbox img{display:block;width:100%;height:100%;object-fit:contain}.spot-lightbox-close{position:absolute;top:1rem;right:1rem;color:#fff;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.4)}@media(max-width:600px){.spot-gallery{grid-template-columns:2.75rem minmax(0,1fr) 2.75rem;gap:.5rem}.spot-lightbox{padding:3.5rem .5rem .5rem}}</style>
 </head>
 <body>
@@ -16,23 +16,28 @@
             <?php if ($spot->getCategories() !== []): ?><ul class="tag-list"><?php foreach ($spot->getCategories() as $category): ?><li class="badge"><?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?></li><?php endforeach; ?></ul><?php endif; ?>
             <h1><?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?></h1>
             <p class="spot-hero-meta"><span class="spot-author"><img class="spot-author-avatar" src="<?= htmlspecialchars($spot->getAuthorAvatarPath() ?? '/images/default-avatar.svg', ENT_QUOTES, 'UTF-8') ?>" alt="" width="32" height="32"><span>Dodano przez <?= htmlspecialchars($spot->getAuthorName() ?? 'Użytkownik', ENT_QUOTES, 'UTF-8') ?></span></span><?php if ($spot->getCreatedAt() !== null): ?><time class="spot-created-at" datetime="<?= htmlspecialchars($spot->getCreatedAt()->format(DATE_ATOM), ENT_QUOTES, 'UTF-8') ?>">· <?= htmlspecialchars($spot->getCreatedAt()->format('d.m.Y'), ENT_QUOTES, 'UTF-8') ?></time><?php endif; ?></p>
+            <?php if ($currentUserId !== null): ?>
+                <div class="spot-hero-actions">
+                    <?php if ($currentUserId !== null): ?>
+                        <form class="spot-bookmark-form" action="/spot/bookmark/<?= (int) $spot->getId() ?>" method="post">
+                            <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                            <input type="hidden" name="return_to" value="/spot/details/<?= (int) $spot->getId() ?>">
+                            <button class="spot-bookmark-button<?= $isBookmarked ? ' is-bookmarked' : '' ?>" type="submit" aria-label="<?= $isBookmarked ? 'Remove bookmark' : 'Save spot' ?>: <?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>" aria-pressed="<?= $isBookmarked ? 'true' : 'false' ?>" title="<?= $isBookmarked ? 'Saved spot' : 'Save spot' ?>">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.75h12v16.5l-6-4-6 4z"/></svg>
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                    <?php if ($currentUserId !== null && $spot->getUserId() === $currentUserId): ?>
+                        <form action="/spot/delete/<?= (int) $spot->getId() ?>" method="post" onsubmit="return confirm('Czy na pewno chcesz usunąć ten spot? Tej operacji nie można cofnąć.');">
+                            <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                            <button class="spot-delete-icon" type="submit" aria-label="Usuń mój spot" title="Usuń mój spot"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m3 0-.9 14H5.9L5 6m4 4v6m6-6v6"/></svg></button>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </header>
         <div class="details-layout"><div>
-            <?php if ($currentUserId !== null): ?>
-                <form class="spot-bookmark-form spot-bookmark-details" action="/spot/bookmark/<?= (int) $spot->getId() ?>" method="post">
-                    <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
-                    <input type="hidden" name="return_to" value="/spot/details/<?= (int) $spot->getId() ?>">
-                    <button class="spot-bookmark-button<?= $isBookmarked ? ' is-bookmarked' : '' ?>" type="submit" aria-label="<?= $isBookmarked ? 'Remove bookmark' : 'Save spot' ?>: <?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>" aria-pressed="<?= $isBookmarked ? 'true' : 'false' ?>" title="<?= $isBookmarked ? 'Saved spot' : 'Save spot' ?>">
-                        <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.75h12v16.5l-6-4-6 4z"/></svg>
-                    </button>
-                </form>
-            <?php endif; ?>
-            <?php if ($currentUserId !== null && $spot->getUserId() === $currentUserId): ?>
-                <form action="/spot/delete/<?= (int) $spot->getId() ?>" method="post" style="margin-bottom:var(--space-2)" onsubmit="return confirm('Czy na pewno chcesz usunąć ten spot? Tej operacji nie można cofnąć.');">
-                    <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
-                    <button class="btn btn-danger" type="submit">Usuń mój spot</button>
-                </form>
-            <?php endif; ?>
+            <?php if ($spot->getStatus() === 'pending'): ?><p class="spot-status-badge status-pending">Oczekuje na weryfikację</p><?php elseif ($spot->getStatus() === 'rejected'): ?><p class="spot-status-badge status-rejected">Odrzucony</p><?php if ($spot->getRejectionReason() !== null): ?><p class="spot-rejection-reason"><strong>Powód:</strong> <?= htmlspecialchars($spot->getRejectionReason(), ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?><?php endif; ?>
             <section class="content-card" aria-labelledby="spot-info-heading"><h2 id="spot-info-heading">Informacje o miejscu</h2>
                 <p><?= htmlspecialchars($spot->getDescription() ?? 'Brak dodatkowego opisu tego miejsca.', ENT_QUOTES, 'UTF-8') ?></p>
                 <dl class="info-grid">
