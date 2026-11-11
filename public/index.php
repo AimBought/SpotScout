@@ -53,14 +53,21 @@ $routing->post('/spot/add', SpotController::class, 'add');
 $routing->post('/spot/delete/{id}', SpotController::class, 'delete');
 $routing->post('/spot/bookmark/{id}', SpotController::class, 'toggleBookmark');
 $routing->get('/spot/details/{id}', SpotController::class, 'details');
+$routing->post('/spot/contribute/{id}', SpotController::class, 'contribute');
+$routing->post('/spot/image/delete/{id}', SpotController::class, 'deleteImage');
+$routing->post('/spot/cover/delete/{id}', SpotController::class, 'deleteCoverImage');
 $routing->get('/profile', $profileController, 'index');
 $routing->post('/profile/avatar', $profileController, 'uploadAvatar');
 $routing->get('/admin', $adminController, 'index');
 $routing->get('/admin/moderator', $adminController, 'moderatorTab');
+$routing->get('/admin/photos', $adminController, 'photoTab');
 $routing->post('/admin/role', $adminController, 'changeRole');
 $routing->get('/moderator', $moderatorController, 'index');
+$routing->get('/moderator/photos', $moderatorController, 'photoTab');
 $routing->post('/moderate/approve', $moderationController, 'approve');
 $routing->post('/moderate/reject', $moderationController, 'reject');
+$routing->post('/moderate/image/approve', $moderationController, 'approveImage');
+$routing->post('/moderate/image/reject', $moderationController, 'rejectImage');
 $routing->post('/notifications/read', $notificationController, 'markRead');
 
 $routeFound = $routing->dispatch(

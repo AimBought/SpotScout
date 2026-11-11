@@ -1,5 +1,5 @@
 <?php
-$featuredImage = $featuredSpot?->getImagePath() ?? '/images/featured-spot.svg';
+$featuredImage = $featuredSpot?->getPreviewImagePath() ?? '/images/featured-spot.svg';
 ?>
 <aside class="split-image" style="background-image: url('<?= htmlspecialchars($featuredImage, ENT_QUOTES, 'UTF-8') ?>')" aria-label="Wyróżniona lokalizacja SpotScout">
     <div class="spot-overlay-card">

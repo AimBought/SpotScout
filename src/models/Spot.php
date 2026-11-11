@@ -19,6 +19,7 @@ final class Spot
     private ?float $longitude = null;
     private ?string $category = null;
     private ?string $image_path = null;
+    private ?string $previewImagePath = null;
     private ?int $userId = null;
     private ?string $authorName = null;
     private ?string $authorAvatarPath = null;
@@ -45,6 +46,8 @@ final class Spot
     }
     public function getImagePath(): ?string { return $this->image_path; }
     public function setImagePath(?string $value): void { $this->image_path = $value; }
+    public function getPreviewImagePath(): ?string { return $this->previewImagePath ?? $this->image_path; }
+    public function setPreviewImagePath(?string $value): void { $this->previewImagePath = $value; }
     public function getUserId(): ?int { return $this->userId; }
     public function setUserId(?int $value): void { $this->userId = $value; }
     public function getAuthorName(): ?string { return $this->authorName; }

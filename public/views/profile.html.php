@@ -48,7 +48,7 @@
         <?php if ($spots === []): ?><p class="content-card text-muted">Nie dodałeś jeszcze żadnego spotu.</p><?php endif; ?>
         <div class="spots-grid profile-spots">
             <?php foreach ($spots as $spot): ?>
-                <?php $imagePath = $spot->getImagePath(); ?>
+                <?php $imagePath = $spot->getPreviewImagePath() ?? '/images/featured-spot.svg'; ?>
                 <article class="spot-card"><a href="/spot/details/<?= (int) $spot->getId() ?>" class="spot-card-link">
                     <div class="spot-card-visual<?= $imagePath !== null ? ' has-image' : '' ?>"<?php if ($imagePath !== null): ?> style="background-image:url('<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>')"<?php endif; ?>><?php if ($spot->getCategory() !== null): ?><ul class="tag-list"><li class="badge"><?= htmlspecialchars($spot->getCategory(), ENT_QUOTES, 'UTF-8') ?></li></ul><?php endif; ?></div>
                     <div class="spot-card-body"><div class="spot-card-title-row"><h3 class="spot-title-link"><?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?></h3></div><p class="spot-meta"><?php if ($spot->getLatitude() !== null && $spot->getLongitude() !== null): ?><?= htmlspecialchars(number_format($spot->getLatitude(), 5, '.', '') . ', ' . number_format($spot->getLongitude(), 5, '.', ''), ENT_QUOTES, 'UTF-8') ?><?php else: ?>Brak współrzędnych<?php endif; ?></p><footer class="spot-card-footer"><span class="light-tag">Zobacz szczegóły</span><span class="details-link">Otwórz →</span></footer></div>
@@ -68,7 +68,7 @@
         <?php if ($bookmarkedSpots === []): ?><p class="content-card text-muted">Nie masz jeszcze zapisanych spotów. Użyj ikony zakładki na kafelku lub stronie spotu.</p><?php endif; ?>
         <div class="spots-grid profile-spots">
             <?php foreach ($bookmarkedSpots as $spot): ?>
-                <?php $imagePath = $spot->getImagePath(); ?>
+                <?php $imagePath = $spot->getPreviewImagePath() ?? '/images/featured-spot.svg'; ?>
                 <article class="spot-card"><a href="/spot/details/<?= (int) $spot->getId() ?>" class="spot-card-link">
                     <div class="spot-card-visual<?= $imagePath !== null ? ' has-image' : '' ?>"<?php if ($imagePath !== null): ?> style="background-image:url('<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>')"<?php endif; ?>><?php if ($spot->getCategory() !== null): ?><ul class="tag-list"><li class="badge"><?= htmlspecialchars($spot->getCategory(), ENT_QUOTES, 'UTF-8') ?></li></ul><?php endif; ?></div>
                     <div class="spot-card-body"><div class="spot-card-title-row"><h3 class="spot-title-link"><?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?></h3></div><p class="spot-meta"><?= htmlspecialchars($spot->getAuthorName() ?? 'Użytkownik', ENT_QUOTES, 'UTF-8') ?></p><footer class="spot-card-footer"><span class="light-tag">Szczegóły</span><span class="details-link">Otwórz →</span></footer></div>
