@@ -8,6 +8,7 @@ use App\Database;
 use App\DTO\SpotInputDTO;
 use App\Repository\NotificationRepository;
 use App\Repository\SpotRepository;
+use DomainException;
 use RuntimeException;
 
 final class SpotController extends AppController
@@ -81,7 +82,7 @@ final class SpotController extends AppController
                 $categoryJson = json_encode($categories, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
                 $status = ($_SESSION['user_role'] ?? null) === 'admin' ? 'approved' : 'pending';
                 $spotId = $this->spots->save(new SpotInputDTO($title, null, $status, (float) $latitude, (float) $longitude, $categoryJson, $imagePaths[0], (int) $_SESSION['user_id']));
-                $this->spots->saveAdditionalImages($spotId, array_slice($imagePaths, 1));
+                $this->spots->saveAdditionalImages($spotId, array_slice($imagePaths, 1), (int) $_SESSION['user_id']);
                 if ($status === 'pending') {
                     $this->notifications->notifyModeratorsAboutPendingSpot($spotId, $title);
                 }
@@ -111,14 +112,116 @@ final class SpotController extends AppController
             $this->render('not-found', ['pageTitle' => 'Spot not found | SpotScout', 'errorMessage' => 'Spot #' . $id . ' does not exist.']);
             return;
         }
+        $contributionSuccess = is_string($_SESSION['contribution_success'] ?? null) ? $_SESSION['contribution_success'] : null;
+        $contributionError = is_string($_SESSION['contribution_error'] ?? null) ? $_SESSION['contribution_error'] : null;
+        unset($_SESSION['contribution_success'], $_SESSION['contribution_error']);
         $this->render('spot-details', [
             'pageTitle' => $spot->getTitle() . ' | SpotScout',
             'spot' => $spot,
-            'images' => $this->spots->findImagePaths($id, $spot->getImagePath()),
+            'images' => $this->spots->findGalleryImages($spot),
+            'ownUnpublishedImages' => isset($_SESSION['user_id']) ? $this->spots->findOwnUnpublishedImages($id, (int) $_SESSION['user_id']) : [],
+            'ownImageCount' => isset($_SESSION['user_id']) ? $this->spots->countOwnImages($id, (int) $_SESSION['user_id']) : 0,
             'currentUserId' => isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null,
             'isBookmarked' => isset($_SESSION['user_id']) && $this->spots->isBookmarkedByUser((int) $_SESSION['user_id'], $id),
+            'contributionSuccess' => $contributionSuccess,
+            'contributionError' => $contributionError,
             'csrfToken' => $this->csrfToken(),
         ]);
+    }
+
+    public function contribute(int $id): void
+    {
+        $this->requireLogin();
+        $token = is_string($_POST['_csrf_token'] ?? null) ? $_POST['_csrf_token'] : '';
+        if (!$this->isPost() || !$this->isCsrfTokenValid($token)) {
+            http_response_code(403);
+            return;
+        }
+
+        $spot = $this->spots->find($id);
+        if ($spot === null || $spot->getStatus() !== 'approved') {
+            http_response_code(404);
+            return;
+        }
+
+        try {
+            $imagePaths = $this->storeUploadedImages($_FILES['images'] ?? null);
+        } catch (RuntimeException $exception) {
+            $_SESSION['contribution_error'] = $exception->getMessage();
+            $this->redirect('/spot/details/' . $id);
+        }
+
+        $userId = (int) $_SESSION['user_id'];
+        $status = ($_SESSION['user_role'] ?? null) === 'admin' ? 'approved' : 'pending';
+        try {
+            $imageIds = $this->spots->addImageContribution($id, $userId, $imagePaths, $status);
+        } catch (DomainException $exception) {
+            foreach ($imagePaths as $path) {
+                @unlink(dirname(__DIR__, 2) . '/public' . $path);
+            }
+            $_SESSION['contribution_error'] = $exception->getMessage();
+            $this->redirect('/spot/details/' . $id);
+        }
+        if ($status === 'pending') {
+            foreach ($imageIds as $imageId) {
+                $this->notifications->notifyModeratorsAboutPendingImage($imageId, $spot->getTitle(), $userId);
+            }
+        }
+        $_SESSION['contribution_success'] = $status === 'approved'
+            ? 'Zdjęcia zostały dodane do galerii.'
+            : 'Zdjęcia zostały wysłane do weryfikacji moderatora.';
+        $this->redirect('/spot/details/' . $id);
+    }
+
+    public function deleteImage(int $id): void
+    {
+        $this->requireLogin();
+        $token = is_string($_POST['_csrf_token'] ?? null) ? $_POST['_csrf_token'] : '';
+        if (!$this->isPost() || !$this->isCsrfTokenValid($token)) {
+            http_response_code(403);
+            return;
+        }
+
+        $deleted = $this->spots->deleteOwnImage($id, (int) $_SESSION['user_id']);
+        if ($deleted === null) {
+            http_response_code(404);
+            return;
+        }
+
+        $this->removeSpotImageFile($deleted['image_path']);
+        $_SESSION['contribution_success'] = 'Twoje zdjęcie zostało usunięte.';
+        $this->redirect('/spot/details/' . $deleted['spot_id']);
+    }
+
+    public function deleteCoverImage(int $id): void
+    {
+        $this->requireLogin();
+        $token = is_string($_POST['_csrf_token'] ?? null) ? $_POST['_csrf_token'] : '';
+        if (!$this->isPost() || !$this->isCsrfTokenValid($token)) {
+            http_response_code(403);
+            return;
+        }
+
+        $deleted = $this->spots->deleteOwnCoverImage($id, (int) $_SESSION['user_id']);
+        if ($deleted === null) {
+            http_response_code(404);
+            return;
+        }
+
+        $this->removeSpotImageFile($deleted['image_path']);
+        $_SESSION['contribution_success'] = 'Twoje zdjęcie zostało usunięte.';
+        $this->redirect('/spot/details/' . $deleted['spot_id']);
+    }
+
+    private function removeSpotImageFile(string $path): void
+    {
+        if (!str_starts_with($path, '/uploads/spots/') || basename($path) !== substr($path, strlen('/uploads/spots/'))) {
+            return;
+        }
+        $filePath = dirname(__DIR__, 2) . '/public' . $path;
+        if (is_file($filePath)) {
+            @unlink($filePath);
+        }
     }
 
     public function delete(int $id): void

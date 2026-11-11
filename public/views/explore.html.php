@@ -34,7 +34,7 @@
             <?php if ($spots === []): ?><p class="empty-spots">Nie dodano jeszcze żadnych spotów. Dodaj pierwszy i podziel się lokalizacją.</p><?php endif; ?>
             <p class="empty-spots" id="spot-search-empty" role="status" hidden>Nie znaleziono spotów spełniających wybrane kryteria.</p>
             <?php foreach ($spots as $spot): ?>
-                <?php $imagePath = $spot->getImagePath(); ?>
+                <?php $imagePath = $spot->getPreviewImagePath() ?? '/images/featured-spot.svg'; ?>
                 <?php $isSpotBookmarked = in_array((int) $spot->getId(), $bookmarkedSpotIds, true); ?>
                 <article class="spot-card" data-spot-id="<?= (int) $spot->getId() ?>">
                     <a class="spot-card-link" href="/spot/details/<?= (int) $spot->getId() ?>">

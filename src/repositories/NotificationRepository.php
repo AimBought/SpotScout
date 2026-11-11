@@ -36,6 +36,22 @@ final class NotificationRepository
         $statement->execute(['message_insert' => $message, 'message_check' => $message]);
     }
 
+    public function notifyModeratorsAboutPendingImage(int $imageId, string $spotTitle, int $contributorId): void
+    {
+        $message = 'New photo for "' . $spotTitle . '" is awaiting moderation. (#' . $imageId . ')';
+        $statement = $this->database->prepare(
+            'INSERT INTO notifications (user_id, message) '
+            . 'SELECT u.id, :message_insert FROM users u '
+            . 'WHERE u.role IN (\'moderator\', \'admin\') AND u.id <> :contributor_id '
+            . 'AND NOT EXISTS (SELECT 1 FROM notifications n WHERE n.user_id = u.id AND n.message = :message_check)'
+        );
+        $statement->execute([
+            'message_insert' => $message,
+            'message_check' => $message,
+            'contributor_id' => $contributorId,
+        ]);
+    }
+
     /** @return array<int, Notification> */
     public function findUnreadByUserId(int $userId): array
     {

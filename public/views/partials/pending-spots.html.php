@@ -17,9 +17,10 @@
                 <?php if ($spotImages !== []): ?>
                     <div class="pending-spot-gallery" data-images="<?= htmlspecialchars(json_encode($spotImages, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_THROW_ON_ERROR), ENT_QUOTES, 'UTF-8') ?>">
                         <button class="btn btn-outline pending-gallery-previous" type="button" aria-label="Poprzednie zdjęcie">&#8592;</button>
-                        <img class="pending-spot-gallery-image" src="<?= htmlspecialchars($spotImages[0], ENT_QUOTES, 'UTF-8') ?>" alt="Zdjęcie spotu: <?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
+                        <img class="pending-spot-gallery-image" src="<?= htmlspecialchars($spotImages[0]['path'], ENT_QUOTES, 'UTF-8') ?>" alt="Zdjęcie spotu: <?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>" tabindex="0">
                         <button class="btn btn-outline pending-gallery-next" type="button" aria-label="Następne zdjęcie">&#8594;</button>
                         <span class="badge pending-gallery-count">1 / <?= count($spotImages) ?></span>
+                        <span class="pending-gallery-author">Dodano przez <?= htmlspecialchars($spotImages[0]['author_name'] ?? 'Użytkownik', ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
                 <?php endif; ?>
                 <?php if ($spot->getLatitude() !== null && $spot->getLongitude() !== null): ?>
@@ -49,8 +50,8 @@
         <button class="btn btn-outline pending-lightbox-previous" id="pending-lightbox-previous" type="button" aria-label="Poprzednie zdjęcie">&#8592;</button>
         <img id="pending-lightbox-image" alt="Powiększone zdjęcie spotu">
         <button class="btn btn-outline pending-lightbox-next" id="pending-lightbox-next" type="button" aria-label="Następne zdjęcie">&#8594;</button>
+        <span class="pending-lightbox-author" id="pending-lightbox-author"></span>
     </dialog>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const pendingLightbox = document.getElementById('pending-image-lightbox');
         const pendingLightboxImage = document.getElementById('pending-lightbox-image');
@@ -58,7 +59,8 @@
         let activePendingIndex = 0;
         function showPendingLightboxImage(index) {
             activePendingIndex = (index + activePendingImages.length) % activePendingImages.length;
-            pendingLightboxImage.src = activePendingImages[activePendingIndex];
+            pendingLightboxImage.src = activePendingImages[activePendingIndex].path;
+            document.getElementById('pending-lightbox-author').textContent = `Dodano przez ${activePendingImages[activePendingIndex].author_name || 'Użytkownik'}`;
         }
         document.querySelectorAll('.pending-spot-gallery').forEach((gallery) => {
             const images = JSON.parse(gallery.dataset.images);
@@ -67,8 +69,9 @@
             let index = 0;
             const showImage = (nextIndex) => {
                 index = (nextIndex + images.length) % images.length;
-                image.src = images[index];
+                image.src = images[index].path;
                 counter.textContent = `${index + 1} / ${images.length}`;
+                gallery.querySelector('.pending-gallery-author').textContent = `Dodano przez ${images[index].author_name || 'Użytkownik'}`;
             };
             gallery.querySelector('.pending-gallery-previous').addEventListener('click', () => showImage(index - 1));
             gallery.querySelector('.pending-gallery-next').addEventListener('click', () => showImage(index + 1));

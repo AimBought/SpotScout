@@ -25,9 +25,20 @@ final class AdminController extends AppController
         foreach ($pendingSpots as $spot) {
             $this->notifications->notifyModeratorsAboutPendingSpot((int) $spot->getId(), $spot->getTitle());
         }
+        $pendingImageContributions = $this->spots->findPendingImageContributions();
+        $pendingImageContributionGroups = $this->spots->findPendingImageContributionGroups();
+        foreach ($pendingImageContributions as $contribution) {
+            if ($contribution['contributor_user_id'] !== null) {
+                $this->notifications->notifyModeratorsAboutPendingImage(
+                    $contribution['id'],
+                    $contribution['spot_title'],
+                    $contribution['contributor_user_id'],
+                );
+            }
+        }
         $pendingSpotImages = [];
         foreach ($pendingSpots as $spot) {
-            $pendingSpotImages[(int) $spot->getId()] = $this->spots->findImagePaths((int) $spot->getId(), $spot->getImagePath());
+            $pendingSpotImages[(int) $spot->getId()] = $this->spots->findGalleryImages($spot);
         }
         $this->render('admin', [
             'pageTitle' => 'Admin Panel | SpotScout',
@@ -36,6 +47,8 @@ final class AdminController extends AppController
             'activeTab' => 'users',
             'pendingSpots' => $pendingSpots,
             'pendingSpotImages' => $pendingSpotImages,
+            'pendingImageContributions' => $pendingImageContributions,
+            'pendingImageContributionGroups' => $pendingImageContributionGroups,
         ]);
     }
 
@@ -46,17 +59,61 @@ final class AdminController extends AppController
         foreach ($pendingSpots as $spot) {
             $this->notifications->notifyModeratorsAboutPendingSpot((int) $spot->getId(), $spot->getTitle());
         }
+        $pendingImageContributions = $this->spots->findPendingImageContributions();
+        $pendingImageContributionGroups = $this->spots->findPendingImageContributionGroups();
+        foreach ($pendingImageContributions as $contribution) {
+            if ($contribution['contributor_user_id'] !== null) {
+                $this->notifications->notifyModeratorsAboutPendingImage(
+                    $contribution['id'],
+                    $contribution['spot_title'],
+                    $contribution['contributor_user_id'],
+                );
+            }
+        }
         $pendingSpotImages = [];
         foreach ($pendingSpots as $spot) {
-            $pendingSpotImages[(int) $spot->getId()] = $this->spots->findImagePaths((int) $spot->getId(), $spot->getImagePath());
+            $pendingSpotImages[(int) $spot->getId()] = $this->spots->findGalleryImages($spot);
         }
         $this->render('admin', [
             'pageTitle' => 'Pending Spots | SpotScout',
             'users' => [],
             'csrfToken' => $this->csrfToken(),
-            'activeTab' => 'pending',
+            'activeTab' => 'spots',
             'pendingSpots' => $pendingSpots,
             'pendingSpotImages' => $pendingSpotImages,
+            'pendingImageContributions' => $pendingImageContributions,
+            'pendingImageContributionGroups' => $pendingImageContributionGroups,
+        ]);
+    }
+
+    public function photoTab(): void
+    {
+        $this->requireRole('admin');
+        $pendingSpots = $this->spots->findPendingSpots();
+        foreach ($pendingSpots as $spot) {
+            $this->notifications->notifyModeratorsAboutPendingSpot((int) $spot->getId(), $spot->getTitle());
+        }
+        $pendingImageContributions = $this->spots->findPendingImageContributions();
+        $pendingImageContributionGroups = $this->spots->findPendingImageContributionGroups();
+        foreach ($pendingImageContributions as $contribution) {
+            if ($contribution['contributor_user_id'] !== null) {
+                $this->notifications->notifyModeratorsAboutPendingImage(
+                    $contribution['id'],
+                    $contribution['spot_title'],
+                    $contribution['contributor_user_id'],
+                );
+            }
+        }
+
+        $this->render('admin', [
+            'pageTitle' => 'Pending Photos | SpotScout',
+            'users' => [],
+            'csrfToken' => $this->csrfToken(),
+            'activeTab' => 'photos',
+            'pendingSpots' => $pendingSpots,
+            'pendingSpotImages' => [],
+            'pendingImageContributions' => $pendingImageContributions,
+            'pendingImageContributionGroups' => $pendingImageContributionGroups,
         ]);
     }
 
