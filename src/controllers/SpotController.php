@@ -8,6 +8,7 @@ use App\Database;
 use App\DTO\SpotInputDTO;
 use App\Repository\NotificationRepository;
 use App\Repository\SpotRepository;
+use App\Repository\ReportRepository;
 use DomainException;
 use RuntimeException;
 
@@ -15,12 +16,14 @@ final class SpotController extends AppController
 {
     private SpotRepository $spots;
     private NotificationRepository $notifications;
+    private ReportRepository $reports;
 
     public function __construct()
     {
         $database = (new Database())->connect();
         $this->spots = new SpotRepository($database);
         $this->notifications = new NotificationRepository($database);
+        $this->reports = new ReportRepository($database);
     }
 
     public function explore(): void
@@ -122,11 +125,67 @@ final class SpotController extends AppController
             'ownUnpublishedImages' => isset($_SESSION['user_id']) ? $this->spots->findOwnUnpublishedImages($id, (int) $_SESSION['user_id']) : [],
             'ownImageCount' => isset($_SESSION['user_id']) ? $this->spots->countOwnImages($id, (int) $_SESSION['user_id']) : 0,
             'currentUserId' => isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null,
+            'currentUserRole' => is_string($_SESSION['user_role'] ?? null) ? $_SESSION['user_role'] : null,
+            'reportSubmitted' => ($_GET['report'] ?? null) === 'submitted',
             'isBookmarked' => isset($_SESSION['user_id']) && $this->spots->isBookmarkedByUser((int) $_SESSION['user_id'], $id),
             'contributionSuccess' => $contributionSuccess,
             'contributionError' => $contributionError,
             'csrfToken' => $this->csrfToken(),
         ]);
+    }
+
+    public function report(): void
+    {
+        $this->requireRole('user');
+        $token = is_string($_POST['_csrf_token'] ?? null) ? $_POST['_csrf_token'] : '';
+        if (!$this->isPost() || !$this->isCsrfTokenValid($token)) {
+            http_response_code(403);
+            return;
+        }
+        $id = filter_var($_POST['spot_id'] ?? null, FILTER_VALIDATE_INT);
+        if ($id === false || $id < 1) { http_response_code(400); return; }
+        $spot = $this->spots->find((int) $id);
+        if ($spot === null || $spot->getStatus() !== 'approved') {
+            http_response_code(404);
+            return;
+        }
+        $type = is_string($_POST['report_type'] ?? null) ? $_POST['report_type'] : '';
+        $description = trim(is_string($_POST['description'] ?? null) ? $_POST['description'] : '');
+        if (!in_array($type, ['category', 'location', 'photo', 'delete'], true) || $description === '' || mb_strlen($description) > 2000) {
+            http_response_code(400);
+            return;
+        }
+        $proposedLatitude = null;
+        $proposedLongitude = null;
+        $proposedPhotoKeys = [];
+        if ($type === 'location') {
+            $latitude = filter_var($_POST['proposed_latitude'] ?? null, FILTER_VALIDATE_FLOAT);
+            $longitude = filter_var($_POST['proposed_longitude'] ?? null, FILTER_VALIDATE_FLOAT);
+            if ($latitude === false || $longitude === false || $latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) {
+                http_response_code(400);
+                return;
+            }
+            $proposedLatitude = (float) $latitude;
+            $proposedLongitude = (float) $longitude;
+        }
+        if ($type === 'photo') {
+            $submittedPhotoKeys = $_POST['photo_keys'] ?? [];
+            if (!is_array($submittedPhotoKeys)) { http_response_code(400); return; }
+            $proposedPhotoKeys = array_values(array_unique(array_filter($submittedPhotoKeys, 'is_string')));
+            $gallery = $this->spots->findGalleryImages($spot);
+            $availablePhotoKeys = array_map(
+                static fn (array $image): string => $image['is_cover'] ? 'cover' : (string) $image['image_id'],
+                $gallery,
+            );
+            if ($proposedPhotoKeys === [] || array_diff($proposedPhotoKeys, $availablePhotoKeys) !== []) {
+                http_response_code(400);
+                return;
+            }
+        }
+        $reporterId = (int) $_SESSION['user_id'];
+        $reportId = $this->reports->create((int) $id, $reporterId, $type, $description, $proposedLatitude, $proposedLongitude, $proposedPhotoKeys);
+        $this->notifications->notifyModeratorsAboutReport($reportId, $spot->getTitle(), $reporterId);
+        $this->redirect('/spot/details/' . $id . '?report=submitted');
     }
 
     public function contribute(int $id): void

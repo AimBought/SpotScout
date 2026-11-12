@@ -422,6 +422,38 @@ final class SpotRepository
         return $paths;
     }
 
+    /** @param array<int, string> $categories */
+    public function updateCategory(int $spotId, array $categories): bool
+    {
+        $statement = $this->database->prepare('UPDATE spots SET category = :category, updated_at = CURRENT_TIMESTAMP WHERE id = :id');
+        $statement->execute(['id' => $spotId, 'category' => json_encode($categories, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)]);
+        return $statement->rowCount() === 1;
+    }
+
+    public function updateLocation(int $spotId, float $latitude, float $longitude): bool
+    {
+        $statement = $this->database->prepare('UPDATE spots SET latitude = :latitude, longitude = :longitude, updated_at = CURRENT_TIMESTAMP WHERE id = :id');
+        $statement->execute(['id' => $spotId, 'latitude' => $latitude, 'longitude' => $longitude]);
+        return $statement->rowCount() === 1;
+    }
+
+    /** Delete an approved gallery photo or the cover photo; return its file path. */
+    public function deleteReportedPhoto(int $spotId, string $photoKey): ?string
+    {
+        if ($photoKey === 'cover') {
+            $statement = $this->database->prepare('UPDATE spots SET image_path = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = :spot_id AND image_path IS NOT NULL RETURNING image_path');
+            $statement->execute(['spot_id' => $spotId]);
+            $path = $statement->fetchColumn();
+            return $path === false ? null : (string) $path;
+        }
+        $imageId = filter_var($photoKey, FILTER_VALIDATE_INT);
+        if ($imageId === false || $imageId < 1) { return null; }
+        $statement = $this->database->prepare('DELETE FROM spot_images WHERE id = :id AND spot_id = :spot_id AND status = \'approved\' RETURNING image_path');
+        $statement->execute(['id' => $imageId, 'spot_id' => $spotId]);
+        $path = $statement->fetchColumn();
+        return $path === false ? null : (string) $path;
+    }
+
     public function update(Spot $spot): void
     {
         $statement = $this->database->prepare(
