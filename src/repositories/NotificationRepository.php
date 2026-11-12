@@ -36,6 +36,24 @@ final class NotificationRepository
         $statement->execute(['message_insert' => $message, 'message_check' => $message]);
     }
 
+    public function notifyAdmins(string $message): void
+    {
+        $statement = $this->database->prepare('INSERT INTO notifications (user_id, message) SELECT id, :message FROM users WHERE role = \'admin\'');
+        $statement->execute(['message' => $message]);
+    }
+
+    public function notifyModeratorsAboutReport(int $reportId, string $spotTitle, int $reporterId): void
+    {
+        $message = 'New report for spot "' . $spotTitle . '" is awaiting moderation. (#' . $reportId . ')';
+        $statement = $this->database->prepare(
+            'INSERT INTO notifications (user_id, message) '
+            . 'SELECT u.id, :message_insert FROM users u '
+            . 'WHERE u.role IN (\'moderator\', \'admin\') AND u.id <> :reporter_id '
+            . 'AND NOT EXISTS (SELECT 1 FROM notifications n WHERE n.user_id = u.id AND n.message = :message_check)'
+        );
+        $statement->execute(['message_insert' => $message, 'message_check' => $message, 'reporter_id' => $reporterId]);
+    }
+
     public function notifyModeratorsAboutPendingImage(int $imageId, string $spotTitle, int $contributorId): void
     {
         $message = 'New photo for "' . $spotTitle . '" is awaiting moderation. (#' . $imageId . ')';

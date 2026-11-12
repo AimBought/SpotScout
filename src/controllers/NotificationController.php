@@ -38,7 +38,10 @@ final class NotificationController extends AppController
         $requestedReturn = is_string($_POST['return_to'] ?? null) ? $_POST['return_to'] : '';
         $returnParts = parse_url($requestedReturn);
         $returnPath = is_array($returnParts) && is_string($returnParts['path'] ?? null) ? $returnParts['path'] : '';
-        $allowedPaths = ['/explore', '/profile', '/admin', '/admin/moderator', '/moderator', '/spot/add'];
+        $allowedPaths = [
+            '/explore', '/profile', '/admin', '/admin/moderator', '/admin/photos', '/admin/reports',
+            '/moderator', '/moderator/photos', '/moderator/reports', '/spot/add',
+        ];
         $isSpotDetailsPath = preg_match('~^/spot/details/[1-9][0-9]*$~', $returnPath) === 1;
         $isSafeReturn = str_starts_with($requestedReturn, '/')
             && !str_starts_with($requestedReturn, '//')

@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Repository\UserRepository;
 use App\Repository\SpotRepository;
 use App\Repository\NotificationRepository;
+use App\Repository\ReportRepository;
 
 final class AdminController extends AppController
 {
@@ -14,6 +15,7 @@ final class AdminController extends AppController
         private UserRepository $users,
         private SpotRepository $spots,
         private NotificationRepository $notifications,
+        private ReportRepository $reports,
     )
     {
     }
@@ -49,6 +51,7 @@ final class AdminController extends AppController
             'pendingSpotImages' => $pendingSpotImages,
             'pendingImageContributions' => $pendingImageContributions,
             'pendingImageContributionGroups' => $pendingImageContributionGroups,
+            'reportCount' => $this->reports->countOpen(),
         ]);
     }
 
@@ -83,6 +86,7 @@ final class AdminController extends AppController
             'pendingSpotImages' => $pendingSpotImages,
             'pendingImageContributions' => $pendingImageContributions,
             'pendingImageContributionGroups' => $pendingImageContributionGroups,
+            'reportCount' => $this->reports->countOpen(),
         ]);
     }
 
@@ -114,7 +118,37 @@ final class AdminController extends AppController
             'pendingSpotImages' => [],
             'pendingImageContributions' => $pendingImageContributions,
             'pendingImageContributionGroups' => $pendingImageContributionGroups,
+            'reportCount' => $this->reports->countOpen(),
         ]);
+    }
+
+    public function reportsTab(): void
+    {
+        $this->requireRole('admin');
+        $pendingReports = $this->reports->findPending();
+        $escalatedReports = $this->reports->findEscalated();
+        $this->render('admin', [
+            'pageTitle' => 'Zgłoszenia | SpotScout', 'users' => [], 'csrfToken' => $this->csrfToken(),
+            'activeTab' => 'reports', 'pendingSpots' => [], 'pendingSpotImages' => [],
+            'pendingImageContributions' => [], 'pendingImageContributionGroups' => [],
+            'pendingReports' => $pendingReports, 'escalatedReports' => $escalatedReports,
+            'reportCount' => count($pendingReports) + count($escalatedReports),
+            'reportImages' => $this->buildReportImages([...$pendingReports, ...$escalatedReports]),
+        ]);
+    }
+
+    /** @param array<int, \App\Model\Report> $reports @return array<int, array<int, array{path:string, image_id:?int, is_cover:bool}>> */
+    private function buildReportImages(array $reports): array
+    {
+        $result = [];
+        foreach ($reports as $report) {
+            $spot = $this->spots->find($report->getSpotId());
+            $result[$report->getId()] = $spot === null ? [] : array_map(
+                static fn (array $image): array => ['path' => $image['path'], 'image_id' => $image['image_id'], 'is_cover' => $image['is_cover']],
+                $this->spots->findGalleryImages($spot),
+            );
+        }
+        return $result;
     }
 
     public function changeRole(): void
