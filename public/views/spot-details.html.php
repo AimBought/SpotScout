@@ -49,11 +49,15 @@
             <dialog class="spot-report-dialog" id="delete-spot-dialog" aria-labelledby="delete-spot-title">
                 <form action="/spot/delete/<?= (int) $spot->getId() ?>" method="post" class="spot-report-form">
                     <button class="spot-report-close" type="button" id="close-delete-spot" aria-label="Zamknij">×</button>
-                    <h2 id="delete-spot-title"><?= $currentUserRole === 'moderator' ? 'Oznacz spot do usunięcia' : 'Usuń spot' ?></h2>
+                    <?php $moderatorEscalation = $currentUserRole === 'moderator' && $spot->getUserId() !== $currentUserId; ?>
+                    <?php $adminDeletion = $currentUserRole === 'admin' && $spot->getUserId() !== $currentUserId; ?>
+                    <h2 id="delete-spot-title"><?= $moderatorEscalation ? 'Oznacz spot do usunięcia' : 'Usuń spot' ?></h2>
                     <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
-                    <label for="delete-spot-reason">Powód</label>
-                    <textarea id="delete-spot-reason" name="reason" rows="4" maxlength="1000" required placeholder="Podaj powód usunięcia lub eskalacji"></textarea>
-                    <button class="btn btn-primary" type="submit"><?= $currentUserRole === 'moderator' ? 'Eskaluj do Admina' : 'Potwierdź' ?></button>
+                    <?php if ($moderatorEscalation || $adminDeletion): ?>
+                        <label for="delete-spot-reason">Powód</label>
+                        <textarea id="delete-spot-reason" name="reason" rows="4" maxlength="1000" required placeholder="Podaj powód usunięcia lub eskalacji"></textarea>
+                    <?php endif; ?>
+                    <button class="btn btn-primary" type="submit"><?= $moderatorEscalation ? 'Eskaluj do Admina' : 'Potwierdź usunięcie' ?></button>
                 </form>
             </dialog>
         <?php endif; ?>

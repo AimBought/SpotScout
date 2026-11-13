@@ -405,20 +405,23 @@ final class SpotController extends AppController
             return;
         }
 
+        $isOwner = $spot->getUserId() === $userId;
+        $isModeratorEscalation = $this->hasRole('moderator') && !$isOwner;
+        $isAdminDeletion = $this->hasRole('admin') && !$isOwner;
         $reason = trim(is_string($_POST['reason'] ?? null) ? $_POST['reason'] : '');
-        if ($reason === '' || mb_strlen($reason) > 1000) {
+        if (($isModeratorEscalation || $isAdminDeletion) && ($reason === '' || mb_strlen($reason) > 1000)) {
             http_response_code(400);
             return;
         }
 
-        if ($this->hasRole('moderator')) {
+        if ($isModeratorEscalation) {
             $this->reports->createEscalatedDelete($id, $userId, $reason);
             $this->notifications->notifyAdmins('Spot „' . $spot->getTitle() . '” został oznaczony do usunięcia. Powód: ' . $reason);
             $_SESSION['spot_moderation_flash'] = 'Spot oznaczono do usunięcia. Oczekuje na decyzję Admina.';
             $this->redirect('/spot/details/' . $id);
         }
 
-        if ($this->hasRole('admin') && $spot->getUserId() !== null) {
+        if ($isAdminDeletion && $spot->getUserId() !== null) {
             $this->notifications->create(
                 $spot->getUserId(),
                 'Twój spot „' . $spot->getTitle() . '” został usunięty przez Administratora. Powód: ' . $reason
