@@ -118,6 +118,8 @@ final class SpotController extends AppController
         $contributionSuccess = is_string($_SESSION['contribution_success'] ?? null) ? $_SESSION['contribution_success'] : null;
         $contributionError = is_string($_SESSION['contribution_error'] ?? null) ? $_SESSION['contribution_error'] : null;
         unset($_SESSION['contribution_success'], $_SESSION['contribution_error']);
+        $moderationFlash = is_string($_SESSION['spot_moderation_flash'] ?? null) ? $_SESSION['spot_moderation_flash'] : null;
+        unset($_SESSION['spot_moderation_flash']);
         $this->render('spot-details', [
             'pageTitle' => $spot->getTitle() . ' | SpotScout',
             'spot' => $spot,
@@ -130,8 +132,107 @@ final class SpotController extends AppController
             'isBookmarked' => isset($_SESSION['user_id']) && $this->spots->isBookmarkedByUser((int) $_SESSION['user_id'], $id),
             'contributionSuccess' => $contributionSuccess,
             'contributionError' => $contributionError,
+            'moderationFlash' => $moderationFlash,
             'csrfToken' => $this->csrfToken(),
         ]);
+    }
+
+    public function edit(): void
+    {
+        $this->requireLogin();
+        $spotId = filter_var($this->isPost() ? ($_POST['spot_id'] ?? null) : ($_GET['id'] ?? null), FILTER_VALIDATE_INT);
+        if ($spotId === false || $spotId < 1) { http_response_code(400); return; }
+        $spot = $this->spots->find((int) $spotId);
+        if ($spot === null) { http_response_code(404); return; }
+        $userId = (int) $_SESSION['user_id'];
+        $isOwner = $spot->getUserId() === $userId;
+        $isPrivileged = $this->hasRole(['admin', 'moderator']);
+        $canEditMetadata = $isOwner || $isPrivileged;
+        $images = $this->spots->findGalleryImages($spot);
+        $ownUnpublishedImages = $this->spots->findOwnUnpublishedImages((int) $spotId, $userId);
+        $canManageOwnPhotos = $ownUnpublishedImages !== [] || count(array_filter(
+            $images,
+            static fn (array $image): bool => $image['contributor_user_id'] === $userId,
+        )) > 0;
+        if (!$canEditMetadata && !$canManageOwnPhotos) { http_response_code(403); return; }
+
+        $categories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night'];
+        $errors = [];
+        $moderationReason = '';
+        if ($this->isPost()) {
+            if (!$canEditMetadata) { http_response_code(403); return; }
+            $token = is_string($_POST['_csrf_token'] ?? null) ? $_POST['_csrf_token'] : '';
+            if (!$this->isCsrfTokenValid($token)) { http_response_code(403); $errors[] = 'Nieprawidłowy token bezpieczeństwa.'; }
+            $moderationReason = trim(is_string($_POST['moderation_reason'] ?? null) ? $_POST['moderation_reason'] : '');
+            $moderationReasonRequired = $isPrivileged && !$isOwner;
+            if ($moderationReasonRequired && ($moderationReason === '' || mb_strlen($moderationReason) > 1000)) {
+                $errors[] = 'Podaj powód zmian (maksymalnie 1000 znaków).';
+            }
+            $title = trim(is_string($_POST['title'] ?? null) ? $_POST['title'] : '');
+            $submitted = $_POST['categories'] ?? [];
+            $selectedCategories = is_array($submitted) ? array_values(array_unique(array_filter($submitted, 'is_string'))) : [];
+            $latitude = filter_var($_POST['latitude'] ?? null, FILTER_VALIDATE_FLOAT);
+            $longitude = filter_var($_POST['longitude'] ?? null, FILTER_VALIDATE_FLOAT);
+            if ($title === '' || mb_strlen($title) > 150) { $errors[] = 'Nazwa jest wymagana (maksymalnie 150 znaków).'; }
+            if ($selectedCategories === [] || array_diff($selectedCategories, $categories) !== []) { $errors[] = 'Wybierz co najmniej jedną kategorię.'; }
+            if ($latitude === false || $longitude === false || $latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) { $errors[] = 'Wskaż prawidłową lokalizację na mapie.'; }
+            if ($errors === []) {
+                if (!$this->spots->updateMetadata((int) $spotId, $title, $selectedCategories, (float) $latitude, (float) $longitude)) { http_response_code(409); return; }
+                if ($spot->getUserId() !== null && $spot->getUserId() !== $userId && $isPrivileged) {
+                    $this->notifications->create($spot->getUserId(), 'Twój spot „' . $title . '” został zaktualizowany przez moderację. Powód: ' . $moderationReason);
+                }
+                $this->redirect('/spot/details/' . $spotId);
+            }
+            $spot->setTitle($title);
+            $spot->setCategory(json_encode($selectedCategories, JSON_UNESCAPED_UNICODE) ?: '[]');
+            if ($latitude !== false) { $spot->setLatitude((float) $latitude); }
+            if ($longitude !== false) { $spot->setLongitude((float) $longitude); }
+        }
+        $this->render('edit-spot', [
+            'pageTitle' => 'Edytuj spot | SpotScout',
+            'spot' => $spot,
+            'categories' => $categories,
+            'images' => $images,
+            'ownUnpublishedImages' => $ownUnpublishedImages,
+            'canEditMetadata' => $canEditMetadata,
+            'moderationReasonRequired' => $isPrivileged && !$isOwner,
+            'moderationReason' => $moderationReason,
+            'currentUserRole' => is_string($_SESSION['user_role'] ?? null) ? $_SESSION['user_role'] : null,
+            'currentUserId' => $userId,
+            'errors' => $errors,
+            'csrfToken' => $this->csrfToken(),
+        ]);
+    }
+
+    public function deletePhoto(): void
+    {
+        $this->requireLogin();
+        $token = is_string($_POST['_csrf_token'] ?? null) ? $_POST['_csrf_token'] : '';
+        if (!$this->isPost() || !$this->isCsrfTokenValid($token)) { http_response_code(403); return; }
+        $spotId = filter_var($_POST['spot_id'] ?? null, FILTER_VALIDATE_INT);
+        $photoKey = is_string($_POST['photo_key'] ?? null) ? $_POST['photo_key'] : '';
+        if ($spotId === false || $spotId < 1 || !preg_match('/^(cover|[1-9][0-9]*)$/', $photoKey)) { http_response_code(400); return; }
+        $spot = $this->spots->find((int) $spotId);
+        $photo = $this->spots->findPhotoOwnership((int) $spotId, $photoKey);
+        if ($spot === null || $photo === null) { http_response_code(404); return; }
+        $userId = (int) $_SESSION['user_id'];
+        $privileged = $this->hasRole(['admin', 'moderator']);
+        if (!$privileged && $spot->getUserId() !== $userId && $photo['author_id'] !== $userId) { http_response_code(403); return; }
+        $moderationReasonRequired = $privileged && $spot->getUserId() !== $userId;
+        $reason = trim(is_string($_POST['reason'] ?? null) ? $_POST['reason'] : '');
+        if ($moderationReasonRequired && ($reason === '' || mb_strlen($reason) > 1000)) { http_response_code(400); return; }
+        $deleted = $this->spots->deletePhotoForModeration((int) $spotId, $photoKey);
+        if ($deleted === null) { http_response_code(409); return; }
+        $this->removeSpotImageFile($deleted['image_path']);
+        if ($deleted['author_id'] !== null) {
+            $message = $moderationReasonRequired
+                ? 'Jedno ze zdjęć w spocie „' . $spot->getTitle() . '” zostało usunięte przez moderację. Powód: ' . $reason
+                : ($privileged
+                    ? 'Jedno ze zdjęć w spocie „' . $spot->getTitle() . '” zostało usunięte przez moderację.'
+                    : 'Jedno ze zdjęć w spocie „' . $spot->getTitle() . '” zostało usunięte.');
+            $this->notifications->create($deleted['author_id'], $message);
+        }
+        $this->redirect($privileged || $spot->getUserId() === $userId ? '/spot/edit?id=' . $spotId : '/spot/details/' . $spotId);
     }
 
     public function report(): void
@@ -302,6 +403,26 @@ final class SpotController extends AppController
         if ($spot->getUserId() !== $userId && !$this->hasRole(['admin', 'moderator'])) {
             http_response_code(403);
             return;
+        }
+
+        $reason = trim(is_string($_POST['reason'] ?? null) ? $_POST['reason'] : '');
+        if ($reason === '' || mb_strlen($reason) > 1000) {
+            http_response_code(400);
+            return;
+        }
+
+        if ($this->hasRole('moderator')) {
+            $this->reports->createEscalatedDelete($id, $userId, $reason);
+            $this->notifications->notifyAdmins('Spot „' . $spot->getTitle() . '” został oznaczony do usunięcia. Powód: ' . $reason);
+            $_SESSION['spot_moderation_flash'] = 'Spot oznaczono do usunięcia. Oczekuje na decyzję Admina.';
+            $this->redirect('/spot/details/' . $id);
+        }
+
+        if ($this->hasRole('admin') && $spot->getUserId() !== null) {
+            $this->notifications->create(
+                $spot->getUserId(),
+                'Twój spot „' . $spot->getTitle() . '” został usunięty przez Administratora. Powód: ' . $reason
+            );
         }
 
         $imagePaths = $this->spots->findImagePaths($id, $spot->getImagePath());

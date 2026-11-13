@@ -437,6 +437,73 @@ final class SpotRepository
         return $statement->rowCount() === 1;
     }
 
+    /** @param array<int, string> $categories */
+    public function updateMetadata(int $spotId, string $title, array $categories, float $latitude, float $longitude): bool
+    {
+        $statement = $this->database->prepare(
+            'UPDATE spots SET title = :title, category = :category, latitude = :latitude, longitude = :longitude, updated_at = CURRENT_TIMESTAMP WHERE id = :id'
+        );
+        $statement->execute([
+            'id' => $spotId,
+            'title' => $title,
+            'category' => json_encode($categories, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+        ]);
+        return $statement->rowCount() === 1;
+    }
+
+    /** @return array{spot_id:int, image_path:string, author_id:?int}|null */
+    public function deletePhotoForModeration(int $spotId, string $photoKey): ?array
+    {
+        if ($photoKey === 'cover') {
+            $statement = $this->database->prepare(
+                'UPDATE spots SET image_path = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = :spot_id AND image_path IS NOT NULL RETURNING id AS spot_id, image_path, user_id AS author_id'
+            );
+        } else {
+            $imageId = filter_var($photoKey, FILTER_VALIDATE_INT);
+            if ($imageId === false || $imageId < 1) {
+                return null;
+            }
+            $statement = $this->database->prepare(
+                'DELETE FROM spot_images WHERE id = :image_id AND spot_id = :spot_id AND status = \'approved\' RETURNING spot_id, image_path, contributor_user_id AS author_id'
+            );
+            $statement->execute(['image_id' => $imageId, 'spot_id' => $spotId]);
+            $row = $statement->fetch();
+            return $row === false ? null : [
+                'spot_id' => (int) $row['spot_id'],
+                'image_path' => (string) $row['image_path'],
+                'author_id' => $row['author_id'] === null ? null : (int) $row['author_id'],
+            ];
+        }
+        $statement->execute(['spot_id' => $spotId]);
+        $row = $statement->fetch();
+        return $row === false ? null : [
+            'spot_id' => (int) $row['spot_id'],
+            'image_path' => (string) $row['image_path'],
+            'author_id' => $row['author_id'] === null ? null : (int) $row['author_id'],
+        ];
+    }
+
+    /** @return array{spot_id:int, author_id:?int}|null */
+    public function findPhotoOwnership(int $spotId, string $photoKey): ?array
+    {
+        if ($photoKey === 'cover') {
+            $statement = $this->database->prepare('SELECT id AS spot_id, user_id AS author_id FROM spots WHERE id = :spot_id AND image_path IS NOT NULL');
+            $statement->execute(['spot_id' => $spotId]);
+        } else {
+            $imageId = filter_var($photoKey, FILTER_VALIDATE_INT);
+            if ($imageId === false || $imageId < 1) { return null; }
+            $statement = $this->database->prepare('SELECT spot_id, contributor_user_id AS author_id FROM spot_images WHERE id = :image_id AND spot_id = :spot_id AND status = \'approved\'');
+            $statement->execute(['image_id' => $imageId, 'spot_id' => $spotId]);
+        }
+        $row = $statement->fetch();
+        return $row === false ? null : [
+            'spot_id' => (int) $row['spot_id'],
+            'author_id' => $row['author_id'] === null ? null : (int) $row['author_id'],
+        ];
+    }
+
     /** Delete an approved gallery photo or the cover photo; return its file path. */
     public function deleteReportedPhoto(int $spotId, string $photoKey): ?string
     {
