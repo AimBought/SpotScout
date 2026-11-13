@@ -18,6 +18,7 @@
 <?php require __DIR__ . '/partials/header.html.php'; ?>
 <main class="page">
     <?php if ($reportSubmitted): ?><p class="report-submitted" role="status">Dziękujemy. Zgłoszenie zostało przekazane do moderacji.</p><?php endif; ?>
+    <?php if ($moderationFlash !== null): ?><p class="report-submitted" role="status"><?= htmlspecialchars($moderationFlash, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
     <article>
         <header class="spot-hero-banner has-image">
             <?php if ($spot->getCategories() !== []): ?><ul class="tag-list"><?php foreach ($spot->getCategories() as $category): ?><li class="badge"><?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?></li><?php endforeach; ?></ul><?php endif; ?>
@@ -34,11 +35,9 @@
                             </button>
                         </form>
                     <?php endif; ?>
-                    <?php if ($currentUserId !== null && $spot->getUserId() === $currentUserId): ?>
-                        <form action="/spot/delete/<?= (int) $spot->getId() ?>" method="post" onsubmit="return confirm('Czy na pewno chcesz usunąć ten spot? Tej operacji nie można cofnąć.');">
-                            <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
-                            <button class="spot-delete-icon" type="submit" aria-label="Usuń mój spot" title="Usuń mój spot"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m3 0-.9 14H5.9L5 6m4 4v6m6-6v6"/></svg></button>
-                        </form>
+                    <?php if ($currentUserId !== null && ($spot->getUserId() === $currentUserId || in_array($currentUserRole, ['admin', 'moderator'], true))): ?>
+                        <a class="btn btn-outline" href="/spot/edit?id=<?= (int) $spot->getId() ?>">Edytuj Spot</a>
+                        <button class="spot-delete-icon" type="button" id="open-delete-spot" aria-label="Usuń spot" title="Usuń spot"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m3 0-.9 14H5.9L5 6m4 4v6m6-6v6"/></svg></button>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
@@ -46,6 +45,18 @@
                 <button class="btn btn-outline spot-report-trigger" type="button" id="open-report-dialog">Zgłoś Spot</button>
             <?php endif; ?>
         </header>
+        <?php if ($currentUserId !== null && ($spot->getUserId() === $currentUserId || in_array($currentUserRole, ['admin', 'moderator'], true))): ?>
+            <dialog class="spot-report-dialog" id="delete-spot-dialog" aria-labelledby="delete-spot-title">
+                <form action="/spot/delete/<?= (int) $spot->getId() ?>" method="post" class="spot-report-form">
+                    <button class="spot-report-close" type="button" id="close-delete-spot" aria-label="Zamknij">×</button>
+                    <h2 id="delete-spot-title"><?= $currentUserRole === 'moderator' ? 'Oznacz spot do usunięcia' : 'Usuń spot' ?></h2>
+                    <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                    <label for="delete-spot-reason">Powód</label>
+                    <textarea id="delete-spot-reason" name="reason" rows="4" maxlength="1000" required placeholder="Podaj powód usunięcia lub eskalacji"></textarea>
+                    <button class="btn btn-primary" type="submit"><?= $currentUserRole === 'moderator' ? 'Eskaluj do Admina' : 'Potwierdź' ?></button>
+                </form>
+            </dialog>
+        <?php endif; ?>
         <?php if ($currentUserRole === 'user' && $spot->getStatus() === 'approved'): ?>
             <dialog class="spot-report-dialog" id="report-dialog" aria-labelledby="report-dialog-title">
                 <form action="/spot/report" method="post" class="spot-report-form">
@@ -97,10 +108,6 @@
                             <img id="gallery-image" src="<?= htmlspecialchars($displayImages[0]['path'], ENT_QUOTES, 'UTF-8') ?>" alt="Zdjęcie miejsca: <?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>">
                             <button type="button" class="btn btn-outline gallery-control" id="gallery-next" aria-label="Następne zdjęcie">→</button>
                         </div>
-                        <form class="spot-gallery-delete-form" id="gallery-delete-form" action="<?= !empty($displayImages[0]['is_cover']) ? '/spot/cover/delete/' . (int) $spot->getId() : '/spot/image/delete/' . (int) ($displayImages[0]['image_id'] ?? 0) ?>" method="post" onsubmit="return confirm('Usunąć to zdjęcie?');" <?= $currentUserId === null || $displayImages[0]['contributor_user_id'] !== $currentUserId || (!$displayImages[0]['is_cover'] && $displayImages[0]['image_id'] === null) ? 'hidden' : '' ?>>
-                            <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
-                            <button class="spot-gallery-delete" type="submit" aria-label="Usuń swoje zdjęcie" title="Usuń swoje zdjęcie"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m3 0-.9 14H5.9L5 6m4 4v6m6-6v6"/></svg></button>
-                        </form>
                     </div>
                     <div class="form-row-between"><p class="gallery-contributor" id="gallery-contributor">Dodano przez <?= htmlspecialchars($displayImages[0]['author_name'] ?? 'Użytkownik', ENT_QUOTES, 'UTF-8') ?></p><span class="badge"><span id="gallery-current">1</span> / <?= count($displayImages) ?></span></div>
                     <p class="text-muted gallery-image-status" id="gallery-image-status"><?= ($displayImages[0]['status'] ?? 'approved') === 'pending' ? 'Oczekuje na weryfikację' : ((($displayImages[0]['status'] ?? 'approved') === 'rejected') ? 'Zdjęcie odrzucone' : '') ?></p>
@@ -108,29 +115,23 @@
                 </section>
                 <dialog class="spot-lightbox" id="spot-lightbox" aria-label="Powiększone zdjęcie"><button class="btn btn-outline spot-lightbox-close" type="button" id="spot-lightbox-close" aria-label="Zamknij zdjęcie">Zamknij ✕</button><img id="spot-lightbox-image" alt="Powiększone zdjęcie spotu"></dialog>
             <?php endif; ?>
-            <?php if ($currentUserId !== null && $ownUnpublishedImages !== []): ?>
-                <section class="content-card" aria-labelledby="own-pending-photos-heading">
-                    <h2 id="own-pending-photos-heading">Twoje zdjęcia oczekujące na moderację</h2>
-                    <p class="text-muted">Pojawią się w galerii dopiero po zatwierdzeniu.</p>
-                    <div class="own-pending-photo-list">
-                        <?php foreach ($ownUnpublishedImages as $image): ?>
-                            <div class="own-pending-photo-row">
-                                <p><?= $image['status'] === 'pending' ? 'Oczekuje na weryfikację' : 'Zdjęcie odrzucone' ?></p>
-                                <form action="/spot/image/delete/<?= (int) $image['id'] ?>" method="post" onsubmit="return confirm('Usunąć to zdjęcie?');">
-                                    <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
-                                    <button class="spot-gallery-delete" type="submit" aria-label="Usuń swoje zdjęcie" title="Usuń swoje zdjęcie"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m3 0-.9 14H5.9L5 6m4 4v6m6-6v6"/></svg></button>
-                                </form>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </section>
-            <?php endif; ?>
+
             <?php if ($currentUserId !== null && $spot->getStatus() === 'approved'): ?>
                 <section class="content-card contribute-card" aria-labelledby="contribute-heading">
                     <h2 id="contribute-heading">Contribute photos</h2>
                     <p class="text-muted">Możesz mieć maksymalnie 5 własnych zdjęć przy tym spocie (pozostało: <?= max(0, 5 - $ownImageCount) ?>). Zdjęcia zostaną opublikowane po akceptacji moderatora; zdjęcia administratora pojawią się od razu.</p>
                     <?php if ($contributionSuccess !== null): ?><p class="form-success"><?= htmlspecialchars($contributionSuccess, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
                     <?php if ($contributionError !== null): ?><p class="form-error"><?= htmlspecialchars($contributionError, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+                    <?php if ($ownUnpublishedImages !== []): ?>
+                        <div class="own-pending-photo-list" aria-label="Status Twoich zdjęć">
+                            <?php foreach ($ownUnpublishedImages as $image): ?>
+                                <div class="own-pending-photo-row">
+                                    <p><?= $image['status'] === 'pending' ? 'Twoje zdjęcie oczekuje na akceptację moderatora.' : 'Twoje zdjęcie zostało odrzucone.' ?></p>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($ownImageCount > 0): ?><p><a class="btn btn-outline" href="/spot/edit?id=<?= (int) $spot->getId() ?>">Zarządzaj moimi zdjęciami</a></p><?php endif; ?>
                     <form action="/spot/contribute/<?= (int) $spot->getId() ?>" method="post" enctype="multipart/form-data" class="contribute-form">
                         <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                         <label for="contribution-images">Zdjęcia (JPEG lub PNG)</label>
@@ -149,6 +150,9 @@
 <script src="/js/theme.js" defer></script>
 <script>
 const reportDialog = document.getElementById('report-dialog');
+const deleteSpotDialog = document.getElementById('delete-spot-dialog');
+document.getElementById('open-delete-spot')?.addEventListener('click', () => deleteSpotDialog.showModal());
+document.getElementById('close-delete-spot')?.addEventListener('click', () => deleteSpotDialog.close());
 let reportLocationMap = null;
 let reportLocationMarker = null;
 const reportTypeSelect = document.getElementById('report-type');
@@ -209,12 +213,7 @@ function showGalleryImage(index) {
     galleryImage.src = image.path;
     document.getElementById('gallery-current').textContent = String(galleryIndex + 1);
     document.getElementById('gallery-contributor').textContent = `Dodano przez ${image.author_name || 'Użytkownik'}`;
-    document.getElementById('gallery-image-status').textContent = image.status === 'pending' ? 'Oczekuje na weryfikację' : (image.status === 'rejected' ? 'Zdjęcie odrzucone' : '');
-    const deleteForm = document.getElementById('gallery-delete-form');
-    const canDelete = image.contributor_user_id === <?= json_encode($currentUserId, JSON_THROW_ON_ERROR) ?> && (image.is_cover || image.image_id !== null);
-    deleteForm.hidden = !canDelete;
-    if (canDelete) deleteForm.action = image.is_cover ? `/spot/cover/delete/<?= (int) $spot->getId() ?>` : `/spot/image/delete/${image.image_id}`;
-}
+    document.getElementById('gallery-image-status').textContent = image.status === 'pending' ? 'Oczekuje na weryfikację' : (image.status === 'rejected' ? 'Zdjęcie odrzucone' : '');}
 galleryImage.addEventListener('click', () => { document.getElementById('spot-lightbox-image').src = galleryImages[galleryIndex].path; lightbox.showModal(); });
 document.getElementById('spot-lightbox-close').addEventListener('click', () => lightbox.close());
 lightbox.addEventListener('click', event => { if (event.target === lightbox) lightbox.close(); });

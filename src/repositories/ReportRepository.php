@@ -29,6 +29,15 @@ final class ReportRepository
         return (int) $statement->fetchColumn();
     }
 
+    public function createEscalatedDelete(int $spotId, int $reporterId, string $description): int
+    {
+        $statement = $this->database->prepare(
+            "INSERT INTO reports (spot_id, reporter_id, report_type, description, status) VALUES (:spot_id, :reporter_id, 'delete', :description, 'escalated') RETURNING id"
+        );
+        $statement->execute(['spot_id' => $spotId, 'reporter_id' => $reporterId, 'description' => $description]);
+        return (int) $statement->fetchColumn();
+    }
+
     /** @return array<int, Report> */
     public function findPending(): array { return $this->findByStatus('pending'); }
 
