@@ -80,6 +80,7 @@ $routing->post('/reports/resolve', $moderationController, 'resolveReport');
 $routing->post('/reports/escalate', $moderationController, 'escalateReport');
 $routing->post('/reports/delete-spot', $moderationController, 'deleteReportedSpot');
 $routing->post('/reports/reject', $moderationController, 'rejectReport');
+$routing->get('/notifications', $notificationController, 'index');
 $routing->post('/notifications/read', $notificationController, 'markRead');
 
 $routeFound = $routing->dispatch(

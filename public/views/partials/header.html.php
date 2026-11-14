@@ -131,6 +131,7 @@
         .notification-item time { display: block; margin-top: .25rem; color: var(--color-muted); font-size: .75rem; }
         .notification-empty { color: var(--color-muted); font-size: .9rem; }
         .notification-mark-read { width: 100%; margin-top: .5rem; }
+        .notification-all-link { display: block; margin-top: .7rem; padding-top: .7rem; border-top: 1px solid var(--color-border); font-size: .85rem; font-weight: 700; text-align: center; }
 
         /* Responsywny layout nagłówka (Mobile-First) */
         html, body {
@@ -226,6 +227,7 @@
                                         <button class="btn btn-outline notification-mark-read" type="submit">Oznacz jako przeczytane</button>
                                     </form>
                                 <?php endif; ?>
+                                <a class="notification-all-link" href="/notifications">Zobacz wszystkie powiadomienia</a>
                             </div>
                         </details>
                     </li>

@@ -224,7 +224,7 @@ final class SpotController extends AppController
         $deleted = $this->spots->deletePhotoForModeration((int) $spotId, $photoKey);
         if ($deleted === null) { http_response_code(409); return; }
         $this->removeSpotImageFile($deleted['image_path']);
-        if ($deleted['author_id'] !== null) {
+        if ($deleted['author_id'] !== null && $deleted['author_id'] !== $userId) {
             $message = $moderationReasonRequired
                 ? 'Jedno ze zdjęć w spocie „' . $spot->getTitle() . '” zostało usunięte przez moderację. Powód: ' . $reason
                 : ($privileged
