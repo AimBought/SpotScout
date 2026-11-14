@@ -16,6 +16,15 @@ final class NotificationController extends AppController
         $this->notifications = new NotificationRepository((new Database())->connect());
     }
 
+    public function index(): void
+    {
+        $this->requireLogin();
+        $this->render('notifications', [
+            'pageTitle' => 'Powiadomienia | SpotScout',
+            'notifications' => $this->notifications->findAllByUserId((int) $_SESSION['user_id']),
+        ]);
+    }
+
     public function markRead(): void
     {
         $this->requireLogin();
@@ -39,7 +48,7 @@ final class NotificationController extends AppController
         $returnParts = parse_url($requestedReturn);
         $returnPath = is_array($returnParts) && is_string($returnParts['path'] ?? null) ? $returnParts['path'] : '';
         $allowedPaths = [
-            '/explore', '/profile', '/admin', '/admin/moderator', '/admin/photos', '/admin/reports',
+            '/explore', '/profile', '/notifications', '/admin', '/admin/moderator', '/admin/photos', '/admin/reports',
             '/moderator', '/moderator/photos', '/moderator/reports', '/spot/add',
         ];
         $isSpotDetailsPath = preg_match('~^/spot/details/[1-9][0-9]*$~', $returnPath) === 1;
