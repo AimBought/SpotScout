@@ -172,7 +172,7 @@ final class ModerationController extends AppController
         if ($type === 'category') {
             $submittedCategories = $_POST['categories'] ?? [];
             $categories = is_array($submittedCategories) ? array_values(array_unique(array_filter($submittedCategories, 'is_string'))) : [];
-            $allowedCategories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night'];
+            $allowedCategories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone', 'Night', 'Abandoned', 'Ruins', 'Underground', 'Water', 'Forest', 'Mountains', 'Interior', 'Street', 'Rural'];
             if ($categories === [] || array_diff($categories, $allowedCategories) !== []) { http_response_code(400); return; }
             $updated = $this->spots->updateCategory($spotId, $categories);
         } elseif ($type === 'location') {
