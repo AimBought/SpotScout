@@ -186,7 +186,7 @@
                 value="<?= htmlspecialchars(is_string($_GET['q'] ?? null) ? $_GET['q'] : '', ENT_QUOTES, 'UTF-8') ?>"
                 placeholder="Search spots, coordinates, tags..."
             >
-            <?php $spotSearchCategories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night']; ?>
+            <?php $spotSearchCategories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone', 'Night', 'Abandoned', 'Ruins', 'Underground', 'Water', 'Forest', 'Mountains', 'Interior', 'Street', 'Rural']; ?>
             <?php $selectedSearchCategories = isset($_GET['categories']) && is_array($_GET['categories']) ? array_filter($_GET['categories'], 'is_string') : []; ?>
             <details class="search-filter">
                 <summary class="search-filter-button" aria-label="Filter by categories" title="Filter by categories">

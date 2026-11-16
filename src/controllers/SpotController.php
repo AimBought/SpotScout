@@ -66,7 +66,7 @@ final class SpotController extends AppController
             $latitude = filter_var($latitudeInput, FILTER_VALIDATE_FLOAT);
             $longitude = filter_var($longitudeInput, FILTER_VALIDATE_FLOAT);
             if ($title === '' || mb_strlen($title) > 150) $errors[] = 'Podaj tytuł (maksymalnie 150 znaków).';
-            $allowedCategories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night'];
+            $allowedCategories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone', 'Night', 'Abandoned', 'Ruins', 'Underground', 'Water', 'Forest', 'Mountains', 'Interior', 'Street', 'Rural'];
             if ($categories === [] || count($categories) > count($allowedCategories) || array_diff($categories, $allowedCategories) !== []) {
                 $errors[] = 'Wybierz co najmniej jedną prawidłową kategorię.';
             }
@@ -95,7 +95,7 @@ final class SpotController extends AppController
 
         $this->render('add-spot', [
             'pageTitle' => 'Add New Spot | SpotScout',
-            'categories' => ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night'],
+            'categories' => ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone', 'Night', 'Abandoned', 'Ruins', 'Underground', 'Water', 'Forest', 'Mountains', 'Interior', 'Street', 'Rural'],
             'csrfToken' => $this->csrfToken(),
             'errors' => $errors,
         ]);
@@ -156,7 +156,7 @@ final class SpotController extends AppController
         )) > 0;
         if (!$canEditMetadata && !$canManageOwnPhotos) { http_response_code(403); return; }
 
-        $categories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone Friendly', 'Night'];
+        $categories = ['Architecture', 'Industrial', 'Urban', 'Nature', 'Drone', 'Night', 'Abandoned', 'Ruins', 'Underground', 'Water', 'Forest', 'Mountains', 'Interior', 'Street', 'Rural'];
         $errors = [];
         $moderationReason = '';
         if ($this->isPost()) {
