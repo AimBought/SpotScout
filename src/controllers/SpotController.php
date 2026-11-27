@@ -35,6 +35,7 @@ final class SpotController extends AppController
             'pageTitle' => 'SpotScout – Explore Locations',
             'spots' => $spots,
             'bookmarkedSpotIds' => $this->spots->findBookmarkedIdsByUserId((int) $_SESSION['user_id']),
+            'upvotedSpotIds' => $this->spots->findUpvotedIdsByUserId((int) $_SESSION['user_id']),
             'csrfToken' => $this->csrfToken(),
             'mapSpots' => array_values(array_map(static fn ($spot): array => [
                 'title' => $spot->getTitle(),
@@ -130,6 +131,7 @@ final class SpotController extends AppController
             'currentUserRole' => is_string($_SESSION['user_role'] ?? null) ? $_SESSION['user_role'] : null,
             'reportSubmitted' => ($_GET['report'] ?? null) === 'submitted',
             'isBookmarked' => isset($_SESSION['user_id']) && $this->spots->isBookmarkedByUser((int) $_SESSION['user_id'], $id),
+            'hasUpvoted' => isset($_SESSION['user_id']) && $this->spots->hasUpvoted((int) $_SESSION['user_id'], $id),
             'contributionSuccess' => $contributionSuccess,
             'contributionError' => $contributionError,
             'moderationFlash' => $moderationFlash,
@@ -469,6 +471,66 @@ final class SpotController extends AppController
         $this->spots->toggleBookmark((int) $_SESSION['user_id'], $id);
         $requestedReturn = $_POST['return_to'] ?? '';
         $allowedReturns = ['/explore', '/profile', '/spot/details/' . $id];
+        $returnTo = is_string($requestedReturn) && in_array($requestedReturn, $allowedReturns, true)
+            ? $requestedReturn
+            : '/explore';
+        $this->redirect($returnTo);
+    }
+
+    public function upvote(int $id): void
+    {
+        $this->requireLogin();
+        $wantsJson = str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
+        $token = is_string($_POST['_csrf_token'] ?? null) ? $_POST['_csrf_token'] : '';
+        if (!$this->isPost() || !$this->isCsrfTokenValid($token)) {
+            http_response_code(403);
+            if ($wantsJson) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['error' => 'Nieprawidłowy token bezpieczeństwa.'], JSON_THROW_ON_ERROR);
+            }
+            return;
+        }
+
+        $spot = $this->spots->find($id);
+        if ($spot === null) {
+            http_response_code(404);
+            if ($wantsJson) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['error' => 'Nie znaleziono spotu.'], JSON_THROW_ON_ERROR);
+            }
+            return;
+        }
+        if ($spot->getStatus() !== 'approved') {
+            $isOwner = $spot->getUserId() === (int) $_SESSION['user_id'];
+            if ($isOwner || $this->hasRole(['admin', 'moderator'])) {
+                if ($wantsJson) {
+                    http_response_code(409);
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['error' => 'Spot oczekuje na weryfikację i nie można go jeszcze oceniać.'], JSON_THROW_ON_ERROR);
+                    return;
+                }
+                $this->redirect('/spot/details/' . $id);
+            }
+            http_response_code(404);
+            if ($wantsJson) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['error' => 'Nie znaleziono spotu.'], JSON_THROW_ON_ERROR);
+            }
+            return;
+        }
+
+        $upvoted = $this->spots->toggleUpvote((int) $_SESSION['user_id'], $id);
+        if ($wantsJson) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'upvoted' => $upvoted,
+                'count' => $this->spots->countUpvotes($id),
+            ], JSON_THROW_ON_ERROR);
+            return;
+        }
+
+        $requestedReturn = $_POST['return_to'] ?? '';
+        $allowedReturns = ['/explore', '/spot/details/' . $id];
         $returnTo = is_string($requestedReturn) && in_array($requestedReturn, $allowedReturns, true)
             ? $requestedReturn
             : '/explore';

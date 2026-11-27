@@ -26,7 +26,14 @@
             <p class="spot-hero-meta"><span class="spot-author"><img class="spot-author-avatar" src="<?= htmlspecialchars($spot->getAuthorAvatarPath() ?? '/images/default-avatar.svg', ENT_QUOTES, 'UTF-8') ?>" alt="" width="32" height="32"><span>Dodano przez <?= htmlspecialchars($spot->getAuthorName() ?? 'Użytkownik', ENT_QUOTES, 'UTF-8') ?></span></span><?php if ($spot->getCreatedAt() !== null): ?><time class="spot-created-at" datetime="<?= htmlspecialchars($spot->getCreatedAt()->format(DATE_ATOM), ENT_QUOTES, 'UTF-8') ?>">· <?= htmlspecialchars($spot->getCreatedAt()->format('d.m.Y'), ENT_QUOTES, 'UTF-8') ?></time><?php endif; ?></p>
             <?php if ($currentUserId !== null): ?>
                 <div class="spot-hero-actions">
-                    <?php if ($currentUserId !== null): ?>
+                    <?php if ($currentUserId !== null && $spot->getStatus() === 'approved'): ?>
+                        <form class="spot-upvote-form" action="/spot/upvote/<?= (int) $spot->getId() ?>" method="post">
+                            <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                            <input type="hidden" name="return_to" value="/spot/details/<?= (int) $spot->getId() ?>">
+                            <button class="spot-upvote-button<?= $hasUpvoted ? ' is-upvoted' : '' ?>" type="submit" data-spot-title="<?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= $hasUpvoted ? 'Usuń swój upvote' : 'Upvote spot' ?>: <?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>" aria-pressed="<?= $hasUpvoted ? 'true' : 'false' ?>" title="<?= $hasUpvoted ? 'Usuń swój upvote' : 'Upvote' ?>">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3Zm0 0 4-8a3 3 0 0 1 2.8 3.8L13 10h5.2a2 2 0 0 1 2 2.4l-1.5 7a2 2 0 0 1-2 1.6H7"/></svg>
+                            </button>
+                        </form>
                         <form class="spot-bookmark-form" action="/spot/bookmark/<?= (int) $spot->getId() ?>" method="post">
                             <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                             <input type="hidden" name="return_to" value="/spot/details/<?= (int) $spot->getId() ?>">
@@ -41,6 +48,7 @@
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
+            <p class="spot-hero-upvote-count" aria-label="Liczba upvote’ów"><span data-upvote-count><?= $spot->getUpvoteCount() ?></span> upvote<?= $spot->getUpvoteCount() === 1 ? '' : 's' ?></p>
             <?php if ($currentUserRole === 'user' && $spot->getStatus() === 'approved'): ?>
                 <button class="btn btn-outline spot-report-trigger" type="button" id="open-report-dialog">Zgłoś Spot</button>
             <?php endif; ?>
@@ -152,6 +160,7 @@
 <footer class="page site-footer"><p>&copy; 2026 SpotScout.</p></footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/js/theme.js" defer></script>
+<script src="/js/upvotes.js" defer></script>
 <script>
 const reportDialog = document.getElementById('report-dialog');
 const deleteSpotDialog = document.getElementById('delete-spot-dialog');
