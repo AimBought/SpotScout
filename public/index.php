@@ -57,6 +57,7 @@ $routing->get('/spot/edit', SpotController::class, 'edit');
 $routing->post('/spot/edit', SpotController::class, 'edit');
 $routing->post('/spot/photo/delete', SpotController::class, 'deletePhoto');
 $routing->post('/spot/bookmark/{id}', SpotController::class, 'toggleBookmark');
+$routing->post('/spot/upvote/{id}', SpotController::class, 'upvote');
 $routing->get('/spot/details/{id}', SpotController::class, 'details');
 $routing->post('/spot/report', SpotController::class, 'report');
 $routing->post('/spot/contribute/{id}', SpotController::class, 'contribute');

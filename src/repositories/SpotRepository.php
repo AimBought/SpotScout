@@ -20,9 +20,9 @@ final class SpotRepository
     public function findAll(): array
     {
         $statement = $this->database->prepare(
-            'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, '
+            'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, COALESCE(vote_counts.upvote_count, 0) AS upvote_count, '
             . 'COALESCE(s.image_path, (SELECT si.image_path FROM spot_images si WHERE si.spot_id = s.id AND si.status = \'approved\' ORDER BY si.created_at ASC, si.id ASC LIMIT 1)) AS preview_image_path, '
-            . 's.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = \'approved\' ORDER BY s.id'
+            . 's.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id LEFT JOIN (SELECT spot_id, COUNT(*) AS upvote_count FROM spot_upvotes GROUP BY spot_id) vote_counts ON vote_counts.spot_id = s.id WHERE s.status = \'approved\' ORDER BY s.id'
         );
         $statement->execute();
 
@@ -32,9 +32,9 @@ final class SpotRepository
     public function find(int $id): ?Spot
     {
         $statement = $this->database->prepare(
-            'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, '
+            'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, COALESCE(vote_counts.upvote_count, 0) AS upvote_count, '
             . 'COALESCE(s.image_path, (SELECT si.image_path FROM spot_images si WHERE si.spot_id = s.id AND si.status = \'approved\' ORDER BY si.created_at ASC, si.id ASC LIMIT 1)) AS preview_image_path, '
-            . 's.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.id = :id'
+            . 's.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id LEFT JOIN (SELECT spot_id, COUNT(*) AS upvote_count FROM spot_upvotes GROUP BY spot_id) vote_counts ON vote_counts.spot_id = s.id WHERE s.id = :id'
         );
         $statement->execute(['id' => $id]);
         $row = $statement->fetch();
@@ -45,9 +45,9 @@ final class SpotRepository
     public function findFeaturedSpot(): ?Spot
     {
         $statement = $this->database->query(
-            'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, '
+            'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, COALESCE(vote_counts.upvote_count, 0) AS upvote_count, '
             . 'COALESCE(s.image_path, (SELECT si.image_path FROM spot_images si WHERE si.spot_id = s.id AND si.status = \'approved\' ORDER BY si.created_at ASC, si.id ASC LIMIT 1)) AS preview_image_path, '
-            . 's.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = \'approved\' ORDER BY s.created_at DESC, s.id DESC LIMIT 1'
+            . 's.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id LEFT JOIN (SELECT spot_id, COUNT(*) AS upvote_count FROM spot_upvotes GROUP BY spot_id) vote_counts ON vote_counts.spot_id = s.id WHERE s.status = \'approved\' ORDER BY COALESCE(vote_counts.upvote_count, 0) DESC, s.created_at DESC, s.id DESC LIMIT 1'
         );
         $row = $statement->fetch();
 
@@ -97,6 +97,62 @@ final class SpotRepository
         $statement->execute(['user_id' => $userId, 'spot_id' => $spotId]);
 
         return $statement->fetchColumn() !== false;
+    }
+
+    /** @return array<int, int> */
+    public function findUpvotedIdsByUserId(int $userId): array
+    {
+        $statement = $this->database->prepare('SELECT spot_id FROM spot_upvotes WHERE user_id = :user_id');
+        $statement->execute(['user_id' => $userId]);
+
+        return array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN));
+    }
+
+    public function hasUpvoted(int $userId, int $spotId): bool
+    {
+        $statement = $this->database->prepare('SELECT 1 FROM spot_upvotes WHERE user_id = :user_id AND spot_id = :spot_id');
+        $statement->execute(['user_id' => $userId, 'spot_id' => $spotId]);
+
+        return $statement->fetchColumn() !== false;
+    }
+
+    public function countUpvotes(int $spotId): int
+    {
+        $statement = $this->database->prepare('SELECT COUNT(*) FROM spot_upvotes WHERE spot_id = :spot_id');
+        $statement->execute(['spot_id' => $spotId]);
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /** Toggle one user's vote, returning whether the spot is upvoted afterwards. */
+    public function toggleUpvote(int $userId, int $spotId): bool
+    {
+        $this->database->beginTransaction();
+        try {
+            $spot = $this->database->prepare("SELECT id FROM spots WHERE id = :spot_id AND status = 'approved' FOR UPDATE");
+            $spot->execute(['spot_id' => $spotId]);
+            if ($spot->fetchColumn() === false) {
+                throw new DomainException('Nie można głosować na spot oczekujący na weryfikację.');
+            }
+
+            $delete = $this->database->prepare('DELETE FROM spot_upvotes WHERE user_id = :user_id AND spot_id = :spot_id');
+            $delete->execute(['user_id' => $userId, 'spot_id' => $spotId]);
+            if ($delete->rowCount() > 0) {
+                $this->database->commit();
+                return false;
+            }
+
+            $insert = $this->database->prepare('INSERT INTO spot_upvotes (user_id, spot_id) VALUES (:user_id, :spot_id) ON CONFLICT (user_id, spot_id) DO NOTHING');
+            $insert->execute(['user_id' => $userId, 'spot_id' => $spotId]);
+            $this->database->commit();
+
+            return true;
+        } catch (\Throwable $exception) {
+            if ($this->database->inTransaction()) {
+                $this->database->rollBack();
+            }
+            throw $exception;
+        }
     }
 
     /** Toggles a bookmark and returns its new state. */
@@ -568,6 +624,7 @@ final class SpotRepository
         $spot->setUserId($row['user_id'] === null ? null : (int) $row['user_id']);
         $spot->setAuthorName($row['author_name'] === null ? null : (string) $row['author_name']);
         $spot->setAuthorAvatarPath($row['author_avatar_path'] === null ? null : (string) $row['author_avatar_path']);
+        $spot->setUpvoteCount((int) ($row['upvote_count'] ?? 0));
 
         return $spot;
     }

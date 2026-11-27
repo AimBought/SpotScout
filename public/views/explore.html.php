@@ -15,6 +15,8 @@
         .empty-spots{padding:var(--space-3);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);color:var(--color-muted)}
         .leaflet-popup-content a{color:var(--color-brand);font-weight:700}
         .spot-author-avatar{width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:.4rem}
+        .spot-card .spot-card-vote { position:absolute; z-index:3; top:.75rem; right:4rem; display:grid; justify-items:center; gap:.2rem; }
+        .spot-upvote-count { padding:.08rem .38rem; border-radius:999px; background:var(--color-surface); color:var(--color-text); font-size:.75rem; font-weight:700; line-height:1.3; box-shadow:0 2px 8px rgba(15,23,42,.2); }
         @media (min-width:48rem){.explore-layout{grid-template-columns:minmax(0,1fr)}.feed-column{min-width:0}.spots-grid{grid-template-columns:repeat(auto-fill,minmax(18rem,1fr))}#explore-map{height:min(52vh,520px)}}
     </style>
 </head>
@@ -36,6 +38,7 @@
             <?php foreach ($spots as $spot): ?>
                 <?php $imagePath = $spot->getPreviewImagePath() ?? '/images/featured-spot.svg'; ?>
                 <?php $isSpotBookmarked = in_array((int) $spot->getId(), $bookmarkedSpotIds, true); ?>
+                <?php $hasUpvoted = in_array((int) $spot->getId(), $upvotedSpotIds, true); ?>
                 <article class="spot-card" data-spot-id="<?= (int) $spot->getId() ?>">
                     <a class="spot-card-link" href="/spot/details/<?= (int) $spot->getId() ?>">
                         <div class="spot-card-visual<?= $imagePath !== null ? ' has-image' : '' ?>"<?php if ($imagePath !== null): ?> style="background-image: url('<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>')"<?php endif; ?>>
@@ -54,6 +57,16 @@
                             <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.75h12v16.5l-6-4-6 4z"/></svg>
                         </button>
                     </form>
+                    <div class="spot-card-vote">
+                        <form class="spot-upvote-form" action="/spot/upvote/<?= (int) $spot->getId() ?>" method="post">
+                            <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                            <input type="hidden" name="return_to" value="/explore">
+                            <button class="spot-upvote-button<?= $hasUpvoted ? ' is-upvoted' : '' ?>" type="submit" data-spot-title="<?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= $hasUpvoted ? 'Usuń swój upvote' : 'Upvote spot' ?>: <?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>" aria-pressed="<?= $hasUpvoted ? 'true' : 'false' ?>" title="<?= $hasUpvoted ? 'Usuń swój upvote' : 'Upvote' ?>">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3Zm0 0 4-8a3 3 0 0 1 2.8 3.8L13 10h5.2a2 2 0 0 1 2 2.4l-1.5 7a2 2 0 0 1-2 1.6H7"/></svg>
+                            </button>
+                        </form>
+                        <span class="spot-upvote-count" data-upvote-count aria-label="Liczba upvote’ów"><?= $spot->getUpvoteCount() ?></span>
+                    </div>
                 </article>
             <?php endforeach; ?>
         </section>
@@ -63,6 +76,7 @@
 <footer class="page site-footer"><p>&copy; 2026 SpotScout.</p></footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/js/theme.js" defer></script>
+<script src="/js/upvotes.js" defer></script>
 <script>
 const spots = <?= json_encode(array_map(static fn ($spot): array => ['id' => $spot->getId(), 'title' => $spot->getTitle(), 'categories' => $spot->getCategories(), 'latitude' => $spot->getLatitude(), 'longitude' => $spot->getLongitude()], $spots), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_THROW_ON_ERROR) ?>;
 const map = L.map('explore-map').setView([52.1, 19.4], 6);

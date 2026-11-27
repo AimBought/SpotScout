@@ -11,6 +11,7 @@ $featuredImage = $featuredSpot?->getPreviewImagePath() ?? '/images/featured-spot
                 <?php if ($featuredSpot->getCategory() !== null && $featuredSpot->getLatitude() !== null): ?> · <?php endif; ?>
                 <?php if ($featuredSpot->getLatitude() !== null && $featuredSpot->getLongitude() !== null): ?><?= htmlspecialchars(number_format($featuredSpot->getLatitude(), 5, '.', '') . ', ' . number_format($featuredSpot->getLongitude(), 5, '.', ''), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
             </p>
+            <p class="featured-upvote-count">👍 <?= $featuredSpot->getUpvoteCount() ?> upvote<?= $featuredSpot->getUpvoteCount() === 1 ? '' : 's' ?></p>
             <a class="btn btn-primary" href="/spot/details/<?= (int) $featuredSpot->getId() ?>">Explore spot <span aria-hidden="true">→</span></a>
         <?php else: ?>
             <span class="spot-overlay-eyebrow">FIND YOUR NEXT FRAME</span>

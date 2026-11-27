@@ -1209,6 +1209,13 @@ html[data-theme="dark"] .theme-toggle-thumb {
 .spot-card { position: relative; }
 .spot-bookmark-form { margin: 0; }
 .spot-card .spot-bookmark-form { position: absolute; z-index: 3; top: .75rem; right: .75rem; }
+.spot-upvote-form { margin: 0; }
+.spot-upvote-button { display: grid; width: 2.65rem; height: 2.65rem; place-items: center; padding: 0; border: 1px solid color-mix(in srgb, var(--color-brand) 45%, var(--color-border)); border-radius: 50%; background: color-mix(in srgb, var(--color-surface) 94%, transparent); color: var(--color-brand); cursor: pointer; box-shadow: 0 3px 12px rgba(15,23,42,.2); transition: background-color .15s ease, color .15s ease, transform .15s ease; }
+.spot-upvote-button:hover, .spot-upvote-button.is-upvoted { transform: translateY(-1px); background: var(--color-brand); color: #fff; }
+.spot-upvote-button.is-upvoted svg { fill: currentColor; }
+.spot-upvote-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-brand) 55%, white); outline-offset: 2px; }
+.spot-hero-upvote-count { margin: .5rem 0 0; color: var(--color-muted); font-size: .9rem; }
+.featured-upvote-count { font-size: .8rem; font-weight: 700; }
 .spot-bookmark-button { display: grid; width: 2.65rem; height: 2.65rem; place-items: center; padding: 0; border: 1px solid color-mix(in srgb, var(--color-brand) 45%, var(--color-border)); border-radius: 50%; background: color-mix(in srgb, var(--color-surface) 94%, transparent); color: var(--color-brand); cursor: pointer; box-shadow: 0 3px 12px rgba(15,23,42,.2); transition: background-color .15s ease, color .15s ease, transform .15s ease; }
 .spot-bookmark-button:hover { transform: translateY(-1px); background: var(--color-brand); color: #fff; }
 .spot-bookmark-button.is-bookmarked { background: var(--color-brand); color: #fff; }
