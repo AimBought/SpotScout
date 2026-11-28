@@ -191,15 +191,27 @@
             <details class="search-filter">
                 <summary class="search-filter-button" aria-label="Filter by categories" title="Filter by categories">
                     <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6.5 7.5V19l-3 1v-7.5L4 5z"/></svg>
+                    <span class="filter-active-count" id="filterActiveCount" aria-live="polite" hidden>0</span>
                     <span class="sr-only">Filter by categories</span>
                 </summary>
-                <div class="search-filter-menu">
-                    <strong>Filter categories</strong>
-                    <?php foreach ($spotSearchCategories as $searchCategory): ?>
-                        <label><input type="checkbox" name="categories[]" value="<?= htmlspecialchars($searchCategory, ENT_QUOTES, 'UTF-8') ?>" <?= in_array($searchCategory, $selectedSearchCategories, true) ? 'checked' : '' ?>><span><?= htmlspecialchars($searchCategory, ENT_QUOTES, 'UTF-8') ?></span></label>
-                    <?php endforeach; ?>
+                <div class="search-filter-menu" id="filterPanel">
+                    <strong class="filter-panel-heading">Filter categories</strong>
+                    <div class="filter-category-grid">
+                        <?php foreach ($spotSearchCategories as $searchCategory): ?>
+                            <label class="filter-category-chip"><input type="checkbox" name="categories[]" value="<?= htmlspecialchars($searchCategory, ENT_QUOTES, 'UTF-8') ?>" <?= in_array($searchCategory, $selectedSearchCategories, true) ? 'checked' : '' ?>><span><?= htmlspecialchars($searchCategory, ENT_QUOTES, 'UTF-8') ?></span></label>
+                        <?php endforeach; ?>
+                    </div>
+                    <label class="filter-number-control" for="minUpvotesInput"><span>Min. upvotes</span><input type="number" id="minUpvotesInput" min="0" placeholder="Min. upvotes" inputmode="numeric"></label>
+                    <label class="filter-sort-control" for="spotSortSelect"><span>Sort by upvotes</span><select id="spotSortSelect"><option value="default">Default order</option><option value="upvotes-desc">Most upvotes</option><option value="upvotes-asc">Fewest upvotes</option></select></label>
+                    <label class="filter-radius-control" for="radiusSelect"><span>Radius from map point</span><select id="radiusSelect"><option value="1">1 km</option><option value="2">2 km</option><option value="3">3 km</option><option value="5">5 km</option><option value="10" selected>10 km</option><option value="15">15 km</option><option value="25">25 km</option><option value="50">50 km</option><option value="75">75 km</option><option value="100">100 km</option><option value="150">150 km</option><option value="200">200 km</option><option value="500">500 km</option></select></label>
+                    <button type="button" id="pickLocationBtn" class="btn btn-outline filter-panel-action">Wybierz punkt na mapie</button>
+                    <button type="button" id="clearLocationBtn" class="btn btn-outline filter-location-clear" hidden>Usuń punkt</button>
+                    <small id="locationPickStatus" class="filter-location-status" aria-live="polite">Punkt nie został wybrany</small>
                 </div>
             </details>
+            <button type="button" id="clearFiltersBtn" class="search-filter-button search-clear-button" aria-label="Wyczyść filtry" title="Wyczyść filtry">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg>
+            </button>
             <button type="submit" class="btn btn-primary">Search</button>
         </form>
         <?php endif; ?>
@@ -256,4 +268,4 @@
         </button>
     </div>
 </header>
-<script src="/js/script.js?v=spot-search-2" defer></script>
+<script src="/js/script.js?v=spot-search-7" defer></script>

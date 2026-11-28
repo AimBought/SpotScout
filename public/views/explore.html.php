@@ -6,7 +6,7 @@
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="/css/style.css?v=moderation-notifications-1">
+    <link rel="stylesheet" href="/css/style.css?v=explore-filter-chips-1">
     <style>
         #explore-map{height:380px;border:1px solid var(--color-border);border-radius:var(--radius);margin-block:var(--space-2)}
         .spot-card-link{display:flex;flex-direction:column;height:100%;color:inherit}
@@ -39,7 +39,7 @@
                 <?php $imagePath = $spot->getPreviewImagePath() ?? '/images/featured-spot.svg'; ?>
                 <?php $isSpotBookmarked = in_array((int) $spot->getId(), $bookmarkedSpotIds, true); ?>
                 <?php $hasUpvoted = in_array((int) $spot->getId(), $upvotedSpotIds, true); ?>
-                <article class="spot-card" data-spot-id="<?= (int) $spot->getId() ?>">
+                <article class="spot-card" data-spot-id="<?= (int) $spot->getId() ?>" data-id="<?= (int) $spot->getId() ?>" data-title="<?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>" data-category="<?= htmlspecialchars(implode(',', $spot->getCategories()), ENT_QUOTES, 'UTF-8') ?>" data-upvotes="<?= $spot->getUpvoteCount() ?>" data-lat="<?= $spot->getLatitude() === null ? '' : htmlspecialchars((string) $spot->getLatitude(), ENT_QUOTES, 'UTF-8') ?>" data-lng="<?= $spot->getLongitude() === null ? '' : htmlspecialchars((string) $spot->getLongitude(), ENT_QUOTES, 'UTF-8') ?>">
                     <a class="spot-card-link" href="/spot/details/<?= (int) $spot->getId() ?>">
                         <div class="spot-card-visual<?= $imagePath !== null ? ' has-image' : '' ?>"<?php if ($imagePath !== null): ?> style="background-image: url('<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>')"<?php endif; ?>>
                             <?php if ($spot->getCategory() !== null): ?><ul class="tag-list"><li class="badge"><?= htmlspecialchars($spot->getCategory(), ENT_QUOTES, 'UTF-8') ?></li></ul><?php endif; ?>
