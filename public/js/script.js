@@ -16,6 +16,10 @@
     const clearFiltersButton = document.querySelector('#clearFiltersBtn');
     const clearLocationButton = document.querySelector('#clearLocationBtn');
     const activeFilterCount = document.querySelector('#filterActiveCount');
+    const pagination = document.querySelector('#explore-pagination');
+    const pageSizeSelect = document.querySelector('#spots-page-size');
+    const paginationStatus = document.querySelector('#explore-pagination-status');
+    const pageControls = document.querySelector('#explore-page-controls');
 
     if (!explore || !searchInput) return;
 
@@ -28,6 +32,55 @@
     let radiusCircle = null;
     let centerMarker = null;
     let isPickingLocation = false;
+    let currentPage = 1;
+
+    function updatePagination(matchingCards) {
+        const pageSize = Number.parseInt(pageSizeSelect?.value ?? '10', 10) || 10;
+        const pageCount = Math.max(1, Math.ceil(matchingCards.length / pageSize));
+        currentPage = Math.min(currentPage, pageCount);
+        const firstIndex = (currentPage - 1) * pageSize;
+        const lastIndex = Math.min(firstIndex + pageSize, matchingCards.length);
+
+        cards.forEach(card => { card.hidden = true; });
+        matchingCards.slice(firstIndex, lastIndex).forEach(card => { card.hidden = false; });
+
+        if (pagination) pagination.hidden = matchingCards.length <= 10;
+        if (paginationStatus) {
+            paginationStatus.textContent = matchingCards.length === 0
+                ? 'Brak spotów do wyświetlenia'
+                : `Wyświetlono ${firstIndex + 1}–${lastIndex} z ${matchingCards.length} spotów`;
+        }
+        if (!pageControls) return;
+
+        pageControls.replaceChildren();
+        const addPageButton = (label, page, {disabled = false, current = false, ariaLabel = label} = {}) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = label;
+            button.disabled = disabled;
+            button.setAttribute('aria-label', ariaLabel);
+            if (current) button.setAttribute('aria-current', 'page');
+            button.addEventListener('click', () => {
+                currentPage = page;
+                updatePagination(matchingCards);
+            });
+            pageControls.appendChild(button);
+        };
+
+        addPageButton('Poprzednia', Math.max(1, currentPage - 1), {
+            disabled: currentPage === 1,
+            ariaLabel: 'Poprzednia strona spotów',
+        });
+        const firstPage = Math.max(1, Math.min(currentPage - 2, pageCount - 4));
+        const lastPage = Math.min(pageCount, firstPage + 4);
+        for (let page = firstPage; page <= lastPage; page++) {
+            addPageButton(String(page), page, {current: page === currentPage, ariaLabel: `Strona ${page}`});
+        }
+        addPageButton('Następna', Math.min(pageCount, currentPage + 1), {
+            disabled: currentPage === pageCount,
+            ariaLabel: 'Następna strona spotów',
+        });
+    }
 
     function updateActiveFilterCount() {
         const activeCategories = categoryInputs.filter(input => input.checked).length;
@@ -45,6 +98,7 @@
     }
 
     function filterSpots() {
+        currentPage = 1;
         const query = searchInput.value.trim().toLocaleLowerCase();
         const selectedCategories = categoryInputs.filter(input => input.checked).map(input => input.value);
         const minUpvotesValue = minUpvotesInput?.value.trim() ?? '';
@@ -52,7 +106,7 @@
         const radiusKm = Number.parseFloat(radiusSelect?.value ?? '10');
         const radiusMeters = radiusKm * 1000;
         const visibleCoordinates = [];
-        let visibleCount = 0;
+        const matchingCards = [];
 
         explore.spots.forEach(spot => {
             const card = cards.get(String(spot.id));
@@ -83,8 +137,8 @@
             }
 
             const visible = matchesQuery && matchesCategories && matchesUpvotes && matchesRadius;
-            card.hidden = !visible;
-            if (visible) visibleCount++;
+            card.dataset.filterMatch = visible ? 'true' : 'false';
+            if (visible) matchingCards.push(card);
 
             const marker = explore.markers.get(String(spot.id));
             if (!marker) return;
@@ -107,7 +161,7 @@
         if (noResultsMessage) {
             const hasAnyFilter = query !== '' || selectedCategories.length > 0
                 || minUpvotes !== null || selectedCenter !== null;
-            noResultsMessage.hidden = visibleCount > 0 || !hasAnyFilter;
+            noResultsMessage.hidden = matchingCards.length > 0 || !hasAnyFilter;
         }
 
         updateActiveFilterCount();
@@ -122,7 +176,10 @@
                 return voteOrder || originalCardOrder.get(idA) - originalCardOrder.get(idB);
             });
             sortedCards.forEach(([, card]) => spotsGrid.appendChild(card));
+            const sortRank = new Map(sortedCards.map(([, card], index) => [card, index]));
+            matchingCards.sort((cardA, cardB) => sortRank.get(cardA) - sortRank.get(cardB));
         }
+        updatePagination(matchingCards);
 
         const url = new URL(window.location.href);
         if (searchInput.value.trim()) url.searchParams.set('q', searchInput.value.trim());
@@ -169,7 +226,7 @@
     });
 
     categoryInputs.forEach(input => input.addEventListener('change', filterSpots));
-    searchInput.addEventListener('input', updateActiveFilterCount);
+    searchInput.addEventListener('input', filterSpots);
     minUpvotesInput?.addEventListener('input', filterSpots);
     sortSelect?.addEventListener('change', filterSpots);
     radiusSelect?.addEventListener('change', () => {
@@ -227,6 +284,12 @@
         if (locationPickStatus) locationPickStatus.textContent = 'Punkt nie został wybrany';
         filterSpots();
     });
+
+    pageSizeSelect?.addEventListener('change', () => {
+        currentPage = 1;
+        filterSpots();
+    });
+    document.addEventListener('spot-upvote-updated', filterSpots);
 
     filterSpots();
 })();

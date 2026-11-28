@@ -29,6 +29,11 @@ document.addEventListener('submit', async event => {
             count.textContent = String(result.count);
             count.setAttribute('aria-label', `Liczba upvote’ów: ${result.count}`);
         });
+        const spotCard = form.closest('.spot-card');
+        if (spotCard) {
+            spotCard.dataset.upvotes = String(result.count);
+            document.dispatchEvent(new Event('spot-upvote-updated'));
+        }
     } catch (error) {
         window.alert(error instanceof Error ? error.message : 'Nie udało się zapisać głosu.');
     } finally {

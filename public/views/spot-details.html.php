@@ -5,13 +5,47 @@
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="/css/style.css?v=spot-gallery-review-1">
+    <link rel="stylesheet" href="/css/style.css?v=spot-layout-fix-2">
     <style>.spot-hero-banner.has-image{background-image:linear-gradient(90deg,rgba(15,23,42,.9),rgba(15,23,42,.35)),url('<?= htmlspecialchars($spot->getPreviewImagePath() ?? '/images/featured-spot.svg', ENT_QUOTES, 'UTF-8') ?>');background-size:cover;background-position:center}.spot-hero-banner h1{margin-top:var(--space-1)}.spot-hero-meta{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem}.spot-author{color:#cbd5e1;display:inline-flex;align-items:center;gap:.5rem;line-height:1.4}.spot-created-at{white-space:nowrap;line-height:1.4}.spot-author-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:0 0 32px}.spot-gallery{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:var(--space-2)}.spot-gallery img{width:100%;max-height:32rem;object-fit:contain;border-radius:var(--radius-sm);background:var(--color-background);cursor:zoom-in}.gallery-control{min-width:2.75rem}.spot-gallery-delete-form{position:absolute;top:.75rem;right:4.75rem;margin:0;z-index:1}.spot-gallery-delete{width:2.75rem;height:2.75rem;display:grid;place-items:center;border:1px solid #fda29b;border-radius:50%;background:#fff1f0;color:#b42318;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.22)}.spot-gallery-delete:hover{background:#fee4e2}.gallery-contributor{margin:.6rem 0 0;color:var(--color-muted);font-size:.9rem}.gallery-image-status:empty{display:none}.own-pending-photo-list{display:grid;gap:.65rem}.own-pending-photo-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.65rem .8rem;border:1px solid var(--color-border);border-radius:var(--radius-sm)}.own-pending-photo-row p{margin:0;color:var(--color-muted)}.own-pending-photo-row .spot-gallery-delete{position:static;width:2.4rem;height:2.4rem;box-shadow:none}#spot-location-map{height:360px;border:1px solid var(--color-border);border-radius:var(--radius)}.spot-lightbox{width:100vw;height:100vh;max-width:none;max-height:none;padding:3rem;border:0;background:rgba(3,7,18,.96);color:#fff}.spot-lightbox::backdrop{background:rgba(3,7,18,.96)}.spot-lightbox img{display:block;width:100%;height:100%;object-fit:contain}.spot-lightbox-close{position:absolute;top:1rem;right:1rem;color:#fff;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.4)}.spot-report-dialog{width:min(34rem,calc(100vw - 2rem));border:1px solid var(--color-border);border-radius:var(--radius);padding:0;background:var(--color-surface);color:var(--color-text);box-shadow:0 1rem 3rem rgba(0,0,0,.35)}.spot-report-dialog::backdrop{background:rgba(3,7,18,.72)}.spot-report-form{display:grid;gap:.75rem;padding:1.5rem}.spot-report-form h2{margin:0 2rem .5rem 0}.spot-report-form label{font-weight:700}.spot-report-form textarea{resize:vertical}.spot-report-close{position:absolute;top:.75rem;right:.75rem;width:2.25rem;height:2.25rem;border:0;border-radius:50%;background:transparent;color:inherit;font-size:1.5rem;cursor:pointer}.spot-report-trigger{margin:.75rem 0}#report-location-map{height:18rem;border:1px solid var(--color-border);border-radius:var(--radius-sm)}#report-location-picker[hidden]{display:none}.report-submitted{padding:.8rem 1rem;border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-brand)}@media(max-width:600px){.spot-gallery{grid-template-columns:2.75rem minmax(0,1fr) 2.75rem;gap:.5rem}.spot-lightbox{padding:3.5rem .5rem .5rem}}</style>
     <style>
         .report-photo-choice-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:.6rem}
         .report-photo-choice{display:flex;align-items:center;gap:.55rem;padding:.55rem;border:1px solid var(--color-border);border-radius:var(--radius-sm);cursor:pointer}
         .report-photo-choice input{width:1rem;height:1rem;flex:0 0 auto}
         .report-photo-choice img{width:4.5rem;height:3.5rem;object-fit:cover;border-radius:.35rem}
+    </style>
+    <style>
+        .details-layout{grid-template-columns:minmax(0,1fr)!important;width:100%}
+        .details-layout>div{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:1.25rem;width:100%}
+        .details-layout>div>*{min-width:0;margin:0}
+        .details-layout>div>section{width:100%}
+        .details-layout>div>section[aria-labelledby="gallery-heading"]{max-width:100%}
+        .spot-gallery-frame{padding:1rem;border:1px solid var(--color-border);border-radius:var(--radius);background:var(--color-background)}
+        .spot-gallery img{height:min(62vh,40rem);min-height:18rem;object-fit:contain}
+        .spot-gallery-delete-form{top:1.5rem;right:1.5rem}
+        .spot-gallery-delete-form[hidden]{display:none}
+        .spot-gallery-delete-form .spot-gallery-delete{border-radius:50%}
+        .gallery-delete-dialog{width:min(30rem,calc(100vw - 2rem));padding:0;border:1px solid var(--color-border);border-radius:var(--radius);background:var(--color-surface);color:var(--color-text);box-shadow:0 1rem 3rem rgba(0,0,0,.4)}
+        .gallery-delete-dialog::backdrop{background:rgba(3,7,18,.72)}
+        .gallery-delete-dialog-content{display:grid;gap:1rem;padding:1.5rem}
+        .gallery-delete-dialog h3{margin:0}
+        .gallery-delete-dialog textarea{width:100%;min-height:8rem;padding:.8rem .9rem;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-background);color:var(--color-text);font:inherit;resize:vertical}
+        .gallery-delete-dialog-actions{display:flex;justify-content:flex-end;gap:.75rem;flex-wrap:wrap}
+        .gallery-delete-dialog-actions .btn{width:auto}
+        .gallery-contributor{margin:.85rem 0 0;line-height:1.5}
+        .gallery-image-status{margin:.5rem 0 0;line-height:1.5}
+        .details-layout>div>.spot-status-badge,.details-layout>div>.spot-rejection-reason{margin:0}
+        .details-layout>div>.btn{justify-self:start}
+        .contribute-form input[type=file]{padding:.55rem;border:1px dashed var(--color-border);border-radius:var(--radius-sm);background:var(--color-background);color:var(--color-text)}
+        .contribute-form input[type=file]::file-selector-button{margin-right:.75rem;padding:.65rem .95rem;border:1px solid var(--color-brand);border-radius:var(--radius-pill);background:var(--color-brand);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+        .contribute-form input[type=file]::file-selector-button:hover{filter:brightness(1.08)}
+        .spot-report-dialog{max-height:min(90vh,56rem);overflow:auto}
+        .spot-report-form{gap:1rem;padding:clamp(1.25rem,4vw,2rem)}
+        .spot-report-form h2{font-size:1.4rem}
+        .spot-report-form>label{color:var(--color-text);font-size:.92rem}
+        .spot-report-form select,.spot-report-form textarea{width:100%;padding:.8rem .9rem;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-background);color:var(--color-text);font:inherit}
+        .spot-report-form textarea{min-height:7rem;resize:vertical}
+        .spot-report-form .btn{width:100%}
+        @media(max-width:52rem){.spot-gallery{grid-template-columns:2.75rem minmax(0,1fr) 2.75rem;gap:.5rem}.spot-gallery img{min-height:12rem;height:min(52vh,28rem)}.spot-gallery-frame{padding:.6rem}.spot-gallery-delete-form{top:1rem;right:1rem}}
     </style>
 </head>
 <body>
@@ -115,6 +149,28 @@
                 <section class="content-card" aria-labelledby="gallery-heading">
                     <h2 id="gallery-heading">Zdjęcia miejsca</h2>
                     <div class="spot-gallery-frame" style="position:relative">
+                        <?php if ($currentUserId !== null): ?>
+                            <form class="spot-gallery-delete-form" id="delete-gallery-photo-form" action="/spot/photo/delete" method="post" hidden>
+                                <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                                <input type="hidden" name="spot_id" value="<?= (int) $spot->getId() ?>">
+                                <input type="hidden" name="photo_key" id="gallery-photo-key" value="">
+                                <input type="hidden" name="return_to" value="/spot/details/<?= (int) $spot->getId() ?>">
+                                <?php if (in_array($currentUserRole, ['admin', 'moderator'], true) && $spot->getUserId() !== $currentUserId): ?>
+                                    <dialog class="gallery-delete-dialog" id="gallery-delete-dialog" aria-labelledby="gallery-delete-heading">
+                                        <div class="gallery-delete-dialog-content">
+                                            <h3 id="gallery-delete-heading">Usuń zdjęcie</h3>
+                                            <label for="gallery-delete-reason">Powód usunięcia zdjęcia</label>
+                                            <textarea class="gallery-delete-reason" id="gallery-delete-reason" name="reason" maxlength="1000" placeholder="Opisz powód usunięcia" required></textarea>
+                                            <div class="gallery-delete-dialog-actions">
+                                                <button class="btn btn-outline" type="button" id="cancel-gallery-delete">Anuluj</button>
+                                                <button class="btn btn-danger" type="submit">Usuń zdjęcie</button>
+                                            </div>
+                                        </div>
+                                    </dialog>
+                                <?php endif; ?>
+                                <button class="spot-gallery-delete" id="open-gallery-delete" type="<?= in_array($currentUserRole, ['admin', 'moderator'], true) && $spot->getUserId() !== $currentUserId ? 'button' : 'submit' ?>" aria-label="Usuń wybrane zdjęcie" title="Usuń wybrane zdjęcie"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m3 2-.9 12H5.9L5 8m4 3v5m6-5v5"/></svg></button>
+                            </form>
+                        <?php endif; ?>
                         <div class="spot-gallery">
                             <button type="button" class="btn btn-outline gallery-control" id="gallery-previous" aria-label="Poprzednie zdjęcie">←</button>
                             <img id="gallery-image" src="<?= htmlspecialchars($displayImages[0]['path'], ENT_QUOTES, 'UTF-8') ?>" alt="Zdjęcie miejsca: <?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?>">
@@ -227,12 +283,32 @@ function showGalleryImage(index) {
     document.getElementById('gallery-current').textContent = String(galleryIndex + 1);
     document.getElementById('gallery-contributor').textContent = `Dodano przez ${image.author_name || 'Użytkownik'}`;
     document.getElementById('gallery-image-status').textContent = image.status === 'pending' ? 'Oczekuje na weryfikację' : (image.status === 'rejected' ? 'Zdjęcie odrzucone' : '');}
+function updateGalleryDeleteButton() {
+    const deleteForm = document.getElementById('delete-gallery-photo-form');
+    if (!deleteForm) return;
+    const image = galleryImages[galleryIndex];
+    const spotOwner = <?= json_encode($currentUserId !== null && $spot->getUserId() === $currentUserId) ?>;
+    const moderator = <?= json_encode(in_array($currentUserRole, ['admin', 'moderator'], true)) ?>;
+    const userId = <?= json_encode($currentUserId) ?>;
+    const photoAuthorId = image.contributor_user_id === null ? null : Number(image.contributor_user_id);
+    deleteForm.hidden = !(spotOwner || moderator || photoAuthorId === userId);
+    document.getElementById('gallery-photo-key').value = image.is_cover ? 'cover' : String(image.image_id);
+    const reasonInput = deleteForm.querySelector('.gallery-delete-reason');
+    if (reasonInput) reasonInput.required = moderator && !spotOwner;
+}
+const galleryDeleteDialog = document.getElementById('gallery-delete-dialog');
+document.getElementById('open-gallery-delete')?.addEventListener('click', event => {
+    if (event.currentTarget.type === 'button' && galleryDeleteDialog) galleryDeleteDialog.showModal();
+});
+document.getElementById('cancel-gallery-delete')?.addEventListener('click', () => galleryDeleteDialog?.close());
+showGalleryImage(0);
+updateGalleryDeleteButton();
 galleryImage.addEventListener('click', () => { document.getElementById('spot-lightbox-image').src = galleryImages[galleryIndex].path; lightbox.showModal(); });
 document.getElementById('spot-lightbox-close').addEventListener('click', () => lightbox.close());
 lightbox.addEventListener('click', event => { if (event.target === lightbox) lightbox.close(); });
 if (galleryImages.length > 1) {
-    document.getElementById('gallery-previous').addEventListener('click', () => showGalleryImage(galleryIndex - 1));
-    document.getElementById('gallery-next').addEventListener('click', () => showGalleryImage(galleryIndex + 1));
+    document.getElementById('gallery-previous').addEventListener('click', () => { showGalleryImage(galleryIndex - 1); updateGalleryDeleteButton(); });
+    document.getElementById('gallery-next').addEventListener('click', () => { showGalleryImage(galleryIndex + 1); updateGalleryDeleteButton(); });
 }
 <?php endif; ?>
 </script>

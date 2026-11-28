@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
-    <link rel="stylesheet" href="/css/style.css?v=spot-gallery-review-1">
+    <link rel="stylesheet" href="/css/style.css?v=spot-layout-fix-2">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -20,7 +20,7 @@
 <?php require __DIR__ . '/partials/header.html.php'; ?>
 <main class="page">
     <header class="feed-header">
-        <div><span class="eyebrow-label">SPOTSCOUT</span><h1>Moderator Panel</h1><p class="text-muted">Twoje konto ma uprawnienia moderatora.</p></div>
+        <div><h1>Moderator Panel</h1><p class="text-muted">Twoje konto ma uprawnienia moderatora.</p></div>
         <span class="role-badge" aria-label="Rola konta: moderator">Moderator</span>
     </header>
     <nav class="admin-tabs" aria-label="Zakładki panelu moderatora">

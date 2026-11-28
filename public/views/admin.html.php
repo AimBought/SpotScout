@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
-    <link rel="stylesheet" href="/css/style.css?v=spot-gallery-review-1">
+    <link rel="stylesheet" href="/css/style.css?v=spot-layout-fix-2">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -24,7 +24,7 @@
 <body>
 <?php require __DIR__ . '/partials/header.html.php'; ?>
 <main class="page">
-    <header class="feed-header"><div><span class="eyebrow-label">SPOTSCOUT</span><h1>Admin Panel</h1></div></header>
+    <header class="feed-header"><div><h1>Admin Panel</h1></div></header>
     <nav class="admin-tabs" aria-label="Zakładki panelu administracyjnego">
         <a class="admin-tab" href="/admin" <?= $activeTab === 'users' ? 'aria-current="page"' : '' ?>>Użytkownicy</a>
         <a class="admin-tab" href="/admin/moderator" <?= $activeTab === 'spots' ? 'aria-current="page"' : '' ?>>Oczekujące spoty (<?= count($pendingSpots) ?>)</a>
