@@ -12,27 +12,42 @@ declare(strict_types=1);
     <?php if ($canEditMetadata): ?><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><?php endif; ?>
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        .edit-spot-form{display:grid;gap:1.2rem;max-width:58rem;margin:2rem auto}
-        .edit-spot-form fieldset{display:grid;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));gap:.7rem;border:1px solid var(--color-border);border-radius:var(--radius);padding:1rem}
+        .edit-spot-form{display:grid;gap:1.5rem;max-width:58rem;margin:2rem auto}
+        .edit-spot-form fieldset{display:flex;flex-wrap:wrap;gap:.65rem;border:1px solid var(--color-border);border-radius:var(--radius);padding:1rem}
         .edit-spot-form fieldset legend{padding:0 .4rem;font-weight:700}
-        .edit-spot-category{display:flex;align-items:center;gap:.55rem}
-        .edit-spot-category input{width:1.1rem;height:1.1rem}
+        .edit-spot-category{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:2.7rem;padding:.65rem 1rem;border:1px solid var(--color-border);border-radius:var(--radius-pill);background:var(--color-background);color:var(--color-muted);font-weight:700;cursor:pointer;transition:background-color .15s ease,color .15s ease,border-color .15s ease,transform .15s ease}
+        .edit-spot-category:hover{border-color:var(--color-brand);transform:translateY(-1px)}
+        .edit-spot-category input{position:absolute;width:1px;height:1px;opacity:0}
+        .edit-spot-category:has(input:checked){background:var(--color-brand);border-color:var(--color-brand);color:#fff}
+        .edit-spot-category:focus-within{outline:3px solid color-mix(in srgb,var(--color-brand) 35%,transparent);outline-offset:2px}
         #edit-spot-map{height:24rem;border:1px solid var(--color-border);border-radius:var(--radius)}
         .edit-spot-errors{padding:1rem;border:1px solid #fda29b;border-radius:var(--radius);color:#b42318}
         .edit-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:1rem;margin-top:1rem}
-        .edit-photo-card{display:grid;align-content:start;gap:.75rem;padding:1rem;border:1px solid var(--color-border);border-radius:var(--radius)}
+        .edit-photo-card{display:grid;align-content:start;gap:1rem;padding:1rem;border:1px solid var(--color-border);border-radius:var(--radius)}
         .edit-photo-card img{width:100%;height:10rem;object-fit:cover;border-radius:var(--radius-sm)}
-        .edit-photo-card p{margin:0;color:var(--color-muted)}
+        .edit-photo-card p{margin:.25rem 0;color:var(--color-muted);line-height:1.5}
         .edit-photo-delete-form{display:grid;gap:.6rem}
         .edit-photo-delete-form textarea{resize:vertical;min-height:5rem}
-        .edit-photo-delete-form .spot-gallery-delete{position:static;width:auto;height:auto;border-radius:var(--radius-sm);box-shadow:none;padding:.6rem .9rem;font:inherit}
+        .edit-photo-delete-form .spot-gallery-delete{position:static;display:grid;place-items:center;width:2.75rem;height:2.75rem;flex:0 0 2.75rem;border-radius:50%;box-shadow:none;padding:.55rem;border:1px solid #fda29b;background:#fff1f0;color:#b42318;cursor:pointer}
+        .edit-photo-delete-form .spot-gallery-delete:hover{background:#fee4e2}
+        .edit-spot-form>label,.edit-spot-form .form-row>label{font-weight:700}
+        .edit-spot-form>input:not([type=hidden]),.edit-spot-form textarea,.edit-spot-form .form-row>input{width:100%;padding:.8rem 1rem;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-background);color:var(--color-text);font:inherit}
+        .edit-spot-form textarea{resize:vertical}
+        .edit-spot-form .form-actions{display:flex;flex-wrap:wrap;gap:.75rem}
+        .edit-photo-card{background:var(--color-background);box-shadow:var(--shadow-card)}
+        .edit-photos-heading{margin-top:0}
+        .edit-photos-intro{margin:.5rem 0 1.25rem;line-height:1.6}
+        .own-pending-photo-list{display:grid;gap:.75rem;margin:1rem 0}
+        .own-pending-photo-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.85rem 1rem;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-background)}
+        .own-pending-photo-row p{margin:0;line-height:1.5}
+        .own-pending-photo-row .edit-photo-delete-form{display:flex;flex:0 0 auto;align-items:center}
+        .own-pending-photo-row .edit-photo-delete-form .spot-gallery-delete{position:static}
     </style>
 </head>
 <body>
 <?php require __DIR__ . '/partials/header.html.php'; ?>
 <main class="page">
     <section class="content-card">
-        <p class="eyebrow">SpotScout</p>
         <h1><?= $canEditMetadata ? 'Edytuj Spot' : 'Zarządzaj swoimi zdjęciami' ?></h1>
         <p class="text-muted"><?= $canEditMetadata ? 'Zmień nazwę, kategorie lub wskaż nowe miejsce na mapie.' : 'Możesz usunąć zdjęcia dodane przez siebie do tego spotu.' ?></p>
         <?php if ($errors !== []): ?><div class="edit-spot-errors" role="alert"><ul><?php foreach ($errors as $error): ?><li><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></li><?php endforeach; ?></ul></div><?php endif; ?>
@@ -67,8 +82,8 @@ declare(strict_types=1);
     </section>
 
     <section class="content-card" aria-labelledby="edit-photos-heading">
-        <h2 id="edit-photos-heading">Zdjęcia spotu</h2>
-        <p class="text-muted">Zdjęcia można usunąć z tego widoku. Autor zdjęcia otrzyma powiadomienie.</p>
+        <h2 class="edit-photos-heading" id="edit-photos-heading">Zdjęcia spotu</h2>
+        <p class="text-muted edit-photos-intro">Wybierz zdjęcie, które chcesz usunąć. Autor zdjęcia otrzyma powiadomienie.</p>
         <div class="edit-photos">
             <?php $visiblePhotoCount = 0; ?>
             <?php foreach ($images as $image): ?>

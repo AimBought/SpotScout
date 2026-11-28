@@ -27,7 +27,7 @@ declare(strict_types=1);
 <?php require __DIR__ . '/partials/header.html.php'; ?>
 <main class="page notifications-page">
     <header class="notifications-heading">
-        <div><span class="eyebrow-label">SPOTSCOUT</span><h1>Powiadomienia</h1><p class="text-muted">Pełna historia wiadomości dotyczących Twojego konta i spotów.</p></div>
+        <div><h1>Powiadomienia</h1><p class="text-muted">Pełna historia wiadomości dotyczących Twojego konta i spotów.</p></div>
         <div class="notifications-actions">
             <a class="btn btn-outline" href="/explore">Wróć do Explore</a>
             <?php $unreadOnPage = array_values(array_filter($notifications, static fn ($notification): bool => !$notification->isRead())); ?>

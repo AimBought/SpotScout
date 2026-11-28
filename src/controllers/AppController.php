@@ -48,7 +48,8 @@ abstract class AppController
         $this->requireLogin();
         if (!$this->hasRole($roles)) {
             http_response_code(403);
-            exit('Forbidden');
+            $this->render('forbidden', ['pageTitle' => 'Brak dostępu · SpotScout']);
+            exit;
         }
     }
 

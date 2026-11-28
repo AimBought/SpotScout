@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
-    <link rel="stylesheet" href="/css/style.css?v=split-screen-3">
+    <link rel="stylesheet" href="/css/style.css?v=split-image-blend-1">
 </head>
 <body class="split-screen-body">
     <?php require __DIR__ . '/partials/header.html.php'; ?>

@@ -268,4 +268,5 @@
         </button>
     </div>
 </header>
-<script src="/js/script.js?v=spot-search-7" defer></script>
+<script src="/js/site-header.js?v=floating-1" defer></script>
+<script src="/js/script.js?v=spot-search-8" defer></script>

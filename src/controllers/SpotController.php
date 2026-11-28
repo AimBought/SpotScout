@@ -234,7 +234,12 @@ final class SpotController extends AppController
                     : 'Jedno ze zdjęć w spocie „' . $spot->getTitle() . '” zostało usunięte.');
             $this->notifications->create($deleted['author_id'], $message);
         }
-        $this->redirect($privileged || $spot->getUserId() === $userId ? '/spot/edit?id=' . $spotId : '/spot/details/' . $spotId);
+        $detailPath = '/spot/details/' . $spotId;
+        $returnTo = is_string($_POST['return_to'] ?? null) ? $_POST['return_to'] : '';
+        if ($returnTo === $detailPath) {
+            $this->redirect($detailPath);
+        }
+        $this->redirect($privileged || $spot->getUserId() === $userId ? '/spot/edit?id=' . $spotId : $detailPath);
     }
 
     public function report(): void

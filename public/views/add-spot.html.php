@@ -7,7 +7,22 @@
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="/css/style.css">
-    <style>#spot-map{height:340px;border:1px solid var(--color-border);border-radius:var(--radius)}.upload-dropzone input{width:100%;color:var(--color-text)}.form-error{color:#b42318}.category-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.65rem}.category-option{display:flex;align-items:center;gap:.55rem;padding:.7rem .85rem;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface-alt)}.category-option input{accent-color:var(--color-brand)}</style>
+    <style>
+        #spot-map{height:340px;border:1px solid var(--color-border);border-radius:var(--radius)}
+        .upload-dropzone input{width:100%;color:var(--color-text)}
+        .form-error{color:#b42318}
+        .category-fieldset{display:grid;gap:.65rem!important}
+        .category-fieldset legend{display:grid;justify-content:start;gap:.3rem}
+        .category-options{display:flex;flex-wrap:wrap;gap:.65rem}
+        .category-option{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:2.7rem;padding:.65rem 1rem;border:1px solid var(--color-border);border-radius:var(--radius-pill);background:var(--color-background);color:var(--color-muted);font-weight:700;cursor:pointer;transition:background-color .15s ease,color .15s ease,border-color .15s ease,transform .15s ease}
+        .category-option:hover{border-color:var(--color-brand);transform:translateY(-1px)}
+        .category-option input{position:absolute;width:1px;height:1px;opacity:0}
+        .category-option:has(input:checked){background:var(--color-brand);border-color:var(--color-brand);color:#fff}
+        .category-option:focus-within{outline:3px solid color-mix(in srgb,var(--color-brand) 35%,transparent);outline-offset:2px}
+        .upload-dropzone{display:grid;gap:.5rem;text-align:left}
+        .upload-dropzone input[type=file]::file-selector-button,.contribute-form input[type=file]::file-selector-button{margin-right:.75rem;padding:.65rem .95rem;border:1px solid var(--color-brand);border-radius:var(--radius-pill);background:var(--color-brand);color:#fff;font:inherit;font-weight:700;cursor:pointer;transition:filter .15s ease}
+        .upload-dropzone input[type=file]::file-selector-button:hover,.contribute-form input[type=file]::file-selector-button:hover{filter:brightness(1.08)}
+    </style>
 </head>
 <body>
 <?php require __DIR__ . '/partials/header.html.php'; ?>
@@ -19,7 +34,7 @@
         <section class="content-card form-stack" aria-labelledby="spot-info-heading">
             <h2 id="spot-info-heading">Informacje o miejscu</h2>
             <div class="form-group"><label for="title" class="form-label-row">Nazwa spotu</label><input class="form-input" type="text" id="title" name="title" maxlength="150" placeholder="np. Stara hala elektrowni" required></div>
-            <fieldset class="form-group" style="border:0;padding:0;margin:0"><legend class="form-label-row">Kategorie <span class="form-hint">Możesz wybrać kilka</span></legend><div class="category-options"><?php foreach ($categories as $category): ?><label class="category-option"><input type="checkbox" name="categories[]" value="<?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?>"><span><?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?></span></label><?php endforeach; ?></div></fieldset>
+            <fieldset class="form-group category-fieldset" style="border:0;padding:0;margin:0"><legend class="form-label-row">Kategorie <span class="form-hint">Możesz wybrać kilka</span></legend><div class="category-options"><?php foreach ($categories as $category): ?><label class="category-option"><input type="checkbox" name="categories[]" value="<?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?>"><span><?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?></span></label><?php endforeach; ?></div></fieldset>
             <div class="form-group"><label for="image" class="form-label-row">Zdjęcia miejsca <span class="form-hint">JPEG lub PNG, od 1 do 5 zdjęć po maksymalnie 5 MB</span></label><div class="upload-dropzone"><input type="file" id="image" name="image[]" accept="image/jpeg,image/png" multiple required></div></div>
         </section>
         <section class="content-card form-stack" aria-labelledby="coordinates-heading">
