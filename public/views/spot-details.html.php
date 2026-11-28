@@ -5,7 +5,7 @@
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="/css/style.css?v=spot-layout-fix-2">
+    <link rel="stylesheet" href="/css/style.css?v=spot-upvote-layer-1">
     <style>.spot-hero-banner.has-image{background-image:linear-gradient(90deg,rgba(15,23,42,.9),rgba(15,23,42,.35)),url('<?= htmlspecialchars($spot->getPreviewImagePath() ?? '/images/featured-spot.svg', ENT_QUOTES, 'UTF-8') ?>');background-size:cover;background-position:center}.spot-hero-banner h1{margin-top:var(--space-1)}.spot-hero-meta{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem}.spot-author{color:#cbd5e1;display:inline-flex;align-items:center;gap:.5rem;line-height:1.4}.spot-created-at{white-space:nowrap;line-height:1.4}.spot-author-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:0 0 32px}.spot-gallery{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:var(--space-2)}.spot-gallery img{width:100%;max-height:32rem;object-fit:contain;border-radius:var(--radius-sm);background:var(--color-background);cursor:zoom-in}.gallery-control{min-width:2.75rem}.spot-gallery-delete-form{position:absolute;top:.75rem;right:4.75rem;margin:0;z-index:1}.spot-gallery-delete{width:2.75rem;height:2.75rem;display:grid;place-items:center;border:1px solid #fda29b;border-radius:50%;background:#fff1f0;color:#b42318;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.22)}.spot-gallery-delete:hover{background:#fee4e2}.gallery-contributor{margin:.6rem 0 0;color:var(--color-muted);font-size:.9rem}.gallery-image-status:empty{display:none}.own-pending-photo-list{display:grid;gap:.65rem}.own-pending-photo-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.65rem .8rem;border:1px solid var(--color-border);border-radius:var(--radius-sm)}.own-pending-photo-row p{margin:0;color:var(--color-muted)}.own-pending-photo-row .spot-gallery-delete{position:static;width:2.4rem;height:2.4rem;box-shadow:none}#spot-location-map{height:360px;border:1px solid var(--color-border);border-radius:var(--radius)}.spot-lightbox{width:100vw;height:100vh;max-width:none;max-height:none;padding:3rem;border:0;background:rgba(3,7,18,.96);color:#fff}.spot-lightbox::backdrop{background:rgba(3,7,18,.96)}.spot-lightbox img{display:block;width:100%;height:100%;object-fit:contain}.spot-lightbox-close{position:absolute;top:1rem;right:1rem;color:#fff;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.4)}.spot-report-dialog{width:min(34rem,calc(100vw - 2rem));border:1px solid var(--color-border);border-radius:var(--radius);padding:0;background:var(--color-surface);color:var(--color-text);box-shadow:0 1rem 3rem rgba(0,0,0,.35)}.spot-report-dialog::backdrop{background:rgba(3,7,18,.72)}.spot-report-form{display:grid;gap:.75rem;padding:1.5rem}.spot-report-form h2{margin:0 2rem .5rem 0}.spot-report-form label{font-weight:700}.spot-report-form textarea{resize:vertical}.spot-report-close{position:absolute;top:.75rem;right:.75rem;width:2.25rem;height:2.25rem;border:0;border-radius:50%;background:transparent;color:inherit;font-size:1.5rem;cursor:pointer}.spot-report-trigger{margin:.75rem 0}#report-location-map{height:18rem;border:1px solid var(--color-border);border-radius:var(--radius-sm)}#report-location-picker[hidden]{display:none}.report-submitted{padding:.8rem 1rem;border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-brand)}@media(max-width:600px){.spot-gallery{grid-template-columns:2.75rem minmax(0,1fr) 2.75rem;gap:.5rem}.spot-lightbox{padding:3.5rem .5rem .5rem}}</style>
     <style>
         .report-photo-choice-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:.6rem}
@@ -15,6 +15,11 @@
     </style>
     <style>
         .details-layout{grid-template-columns:minmax(0,1fr)!important;width:100%}
+        .spot-hero-upvote-count{margin:.75rem 0 0}
+        .spot-hero-upvote-stat{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem .8rem;border:1px solid var(--color-border);border-radius:var(--radius-pill);background:var(--color-background);color:var(--color-muted);font-size:.92rem}
+        .spot-hero-upvote-stat svg{width:1.1rem;height:1.1rem;flex:none;color:var(--color-brand)}
+        .spot-hero-upvote-stat strong{color:var(--color-text);font-size:1rem}
+        #spot-location-map .leaflet-top,#spot-location-map .leaflet-bottom{z-index:400}
         .details-layout>div{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:1.25rem;width:100%}
         .details-layout>div>*{min-width:0;margin:0}
         .details-layout>div>section{width:100%}
@@ -57,7 +62,7 @@
         <header class="spot-hero-banner has-image">
             <?php if ($spot->getCategories() !== []): ?><ul class="tag-list"><?php foreach ($spot->getCategories() as $category): ?><li class="badge"><?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?></li><?php endforeach; ?></ul><?php endif; ?>
             <h1><?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?></h1>
-            <p class="spot-hero-meta"><span class="spot-author"><img class="spot-author-avatar" src="<?= htmlspecialchars($spot->getAuthorAvatarPath() ?? '/images/default-avatar.svg', ENT_QUOTES, 'UTF-8') ?>" alt="" width="32" height="32"><span>Dodano przez <?= htmlspecialchars($spot->getAuthorName() ?? 'Użytkownik', ENT_QUOTES, 'UTF-8') ?></span></span><?php if ($spot->getCreatedAt() !== null): ?><time class="spot-created-at" datetime="<?= htmlspecialchars($spot->getCreatedAt()->format(DATE_ATOM), ENT_QUOTES, 'UTF-8') ?>">· <?= htmlspecialchars($spot->getCreatedAt()->format('d.m.Y'), ENT_QUOTES, 'UTF-8') ?></time><?php endif; ?></p>
+            <p class="spot-hero-meta"><span class="spot-author"><img class="spot-author-avatar" src="<?= htmlspecialchars($spot->getAuthorAvatarPath() ?? '/images/default-avatar.svg', ENT_QUOTES, 'UTF-8') ?>" alt="" width="32" height="32"><span>Dodano przez <?php if ($spot->getUserId() !== null): ?><a href="/users/<?= (int) $spot->getUserId() ?>"><?= htmlspecialchars($spot->getAuthorName() ?? 'Użytkownik', ENT_QUOTES, 'UTF-8') ?></a><?php else: ?><?= htmlspecialchars($spot->getAuthorName() ?? 'Użytkownik', ENT_QUOTES, 'UTF-8') ?><?php endif; ?></span></span><?php if ($spot->getCreatedAt() !== null): ?><time class="spot-created-at" datetime="<?= htmlspecialchars($spot->getCreatedAt()->format(DATE_ATOM), ENT_QUOTES, 'UTF-8') ?>">· <?= htmlspecialchars($spot->getCreatedAt()->format('d.m.Y'), ENT_QUOTES, 'UTF-8') ?></time><?php endif; ?></p>
             <?php if ($currentUserId !== null): ?>
                 <div class="spot-hero-actions">
                     <?php if ($currentUserId !== null && $spot->getStatus() === 'approved'): ?>
@@ -82,7 +87,7 @@
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
-            <p class="spot-hero-upvote-count" aria-label="Liczba upvote’ów"><span data-upvote-count><?= $spot->getUpvoteCount() ?></span> upvote<?= $spot->getUpvoteCount() === 1 ? '' : 's' ?></p>
+            <p class="spot-hero-upvote-count" aria-label="Liczba upvote’ów"><span class="spot-hero-upvote-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v10H4V10h3Zm3 10h7.2a2 2 0 0 0 1.96-1.61l1.2-6A2 2 0 0 0 18.4 10H14l.65-3.24A2.3 2.3 0 0 0 12.4 4L10 10v10Z"/></svg><strong data-upvote-count><?= $spot->getUpvoteCount() ?></strong><span>upvotes</span></span></p>
             <?php if ($currentUserRole === 'user' && $spot->getStatus() === 'approved'): ?>
                 <button class="btn btn-outline spot-report-trigger" type="button" id="open-report-dialog">Zgłoś Spot</button>
             <?php endif; ?>
@@ -177,7 +182,7 @@
                             <button type="button" class="btn btn-outline gallery-control" id="gallery-next" aria-label="Następne zdjęcie">→</button>
                         </div>
                     </div>
-                    <div class="form-row-between"><p class="gallery-contributor" id="gallery-contributor">Dodano przez <?= htmlspecialchars($displayImages[0]['author_name'] ?? 'Użytkownik', ENT_QUOTES, 'UTF-8') ?></p><span class="badge"><span id="gallery-current">1</span> / <?= count($displayImages) ?></span></div>
+                    <div class="form-row-between"><p class="gallery-contributor" id="gallery-contributor"></p><span class="badge"><span id="gallery-current">1</span> / <?= count($displayImages) ?></span></div>
                     <p class="text-muted gallery-image-status" id="gallery-image-status"><?= ($displayImages[0]['status'] ?? 'approved') === 'pending' ? 'Oczekuje na weryfikację' : ((($displayImages[0]['status'] ?? 'approved') === 'rejected') ? 'Zdjęcie odrzucone' : '') ?></p>
                     <?php if ($currentUserId !== null): ?><p class="text-muted">Twoje zdjęcia przy tym spocie: <?= (int) $ownImageCount ?> / 5</p><?php endif; ?>
                 </section>
@@ -281,7 +286,16 @@ function showGalleryImage(index) {
     const image = galleryImages[galleryIndex];
     galleryImage.src = image.path;
     document.getElementById('gallery-current').textContent = String(galleryIndex + 1);
-    document.getElementById('gallery-contributor').textContent = `Dodano przez ${image.author_name || 'Użytkownik'}`;
+    const contributor = document.getElementById('gallery-contributor');
+    contributor.replaceChildren(document.createTextNode('Dodano przez '));
+    if (image.contributor_user_id !== null) {
+        const contributorLink = document.createElement('a');
+        contributorLink.href = `/users/${Number(image.contributor_user_id)}`;
+        contributorLink.textContent = image.author_name || 'Użytkownik';
+        contributor.appendChild(contributorLink);
+    } else {
+        contributor.appendChild(document.createTextNode(image.author_name || 'Użytkownik'));
+    }
     document.getElementById('gallery-image-status').textContent = image.status === 'pending' ? 'Oczekuje na weryfikację' : (image.status === 'rejected' ? 'Zdjęcie odrzucone' : '');}
 function updateGalleryDeleteButton() {
     const deleteForm = document.getElementById('delete-gallery-photo-form');

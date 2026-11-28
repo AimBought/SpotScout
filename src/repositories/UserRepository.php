@@ -46,19 +46,32 @@ final class UserRepository
 
     public function findById(int $userId): ?User
     {
-        $statement = $this->database->prepare('SELECT id, name, email, avatar_path, role FROM users WHERE id = :id');
+        $statement = $this->database->prepare('SELECT id, name, email, avatar_path, role, bio FROM users WHERE id = :id');
         $statement->execute(['id' => $userId]);
         $row = $statement->fetch();
 
-        return $row === false
-            ? null
-            : new User((int) $row['id'], (string) $row['name'], (string) $row['email'], $row['avatar_path'] === null ? null : (string) $row['avatar_path'], (string) $row['role']);
+        if ($row === false) return null;
+
+        return new User(
+            (int) $row['id'],
+            (string) $row['name'],
+            (string) $row['email'],
+            $row['avatar_path'] === null ? null : (string) $row['avatar_path'],
+            (string) $row['role'],
+            $row['bio'] === null ? null : (string) $row['bio'],
+        );
     }
 
     public function updateAvatar(int $userId, string $path): void
     {
         $statement = $this->database->prepare('UPDATE users SET avatar_path = :avatar_path WHERE id = :id');
         $statement->execute(['id' => $userId, 'avatar_path' => $path]);
+    }
+
+    public function updateBio(int $userId, ?string $bio): void
+    {
+        $statement = $this->database->prepare('UPDATE users SET bio = :bio WHERE id = :id');
+        $statement->execute(['id' => $userId, 'bio' => $bio]);
     }
 
     public function create(string $name, string $email, string $passwordHash): int

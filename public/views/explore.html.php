@@ -6,7 +6,7 @@
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="/css/style.css?v=explore-pagination-1">
+    <link rel="stylesheet" href="/css/style.css?v=explore-profiles-1">
     <style>
         #explore-map{height:380px;border:1px solid var(--color-border);border-radius:var(--radius);margin-block:var(--space-2)}
         .spot-card-link{display:flex;flex-direction:column;height:100%;color:inherit}
@@ -17,6 +17,8 @@
         .spot-author-avatar{width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:.4rem}
         .spot-card .spot-card-vote { position:absolute; z-index:3; top:.75rem; right:4rem; display:grid; justify-items:center; gap:.2rem; }
         .spot-upvote-count { padding:.08rem .38rem; border-radius:999px; background:var(--color-surface); color:var(--color-text); font-size:.75rem; font-weight:700; line-height:1.3; box-shadow:0 2px 8px rgba(15,23,42,.2); }
+        .spot-card-author-link{display:inline-flex;align-items:center;align-self:flex-start;gap:.4rem;margin:0 var(--space-2) var(--space-2);color:var(--color-muted);font-size:.9rem;font-weight:600}
+        .spot-card-author-link:hover{color:var(--color-brand)}
         .explore-pagination{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:1.25rem 0 0;padding:1rem 1.1rem;border:1px solid var(--color-border);border-radius:var(--radius);background:var(--color-surface)}
         .explore-pagination[hidden]{display:none}
         .explore-page-size,.explore-page-controls{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
@@ -50,13 +52,13 @@
                     <a class="spot-card-link" href="/spot/details/<?= (int) $spot->getId() ?>">
                         <div class="spot-card-visual<?= $imagePath !== null ? ' has-image' : '' ?>"<?php if ($imagePath !== null): ?> style="background-image: url('<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>')"<?php endif; ?>>
                             <?php if ($spot->getCategory() !== null): ?><ul class="tag-list"><li class="badge"><?= htmlspecialchars($spot->getCategory(), ENT_QUOTES, 'UTF-8') ?></li></ul><?php endif; ?>
-                            <div class="visual-bottom"><span class="photo-author"><img class="spot-author-avatar" src="<?= htmlspecialchars($spot->getAuthorAvatarPath() ?? '/images/default-avatar.svg', ENT_QUOTES, 'UTF-8') ?>" alt="" width="24" height="24">Dodano przez <?= htmlspecialchars($spot->getAuthorName() ?? 'Użytkownik', ENT_QUOTES, 'UTF-8') ?></span></div>
                         </div>
                         <div class="spot-card-body"><div class="spot-card-title-row"><h2 class="spot-title-link"><?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?></h2></div>
                             <p class="spot-meta"><?php if ($spot->getLatitude() !== null && $spot->getLongitude() !== null): ?><?= htmlspecialchars(number_format($spot->getLatitude(), 5, '.', '') . ', ' . number_format($spot->getLongitude(), 5, '.', ''), ENT_QUOTES, 'UTF-8') ?><?php else: ?>Brak współrzędnych<?php endif; ?></p>
                             <footer class="spot-card-footer"><span class="light-tag">Szczegóły i informacje</span><span class="details-link">Zobacz spot →</span></footer>
                         </div>
                     </a>
+                    <?php if ($spot->getUserId() !== null): ?><a class="spot-card-author-link" href="/users/<?= (int) $spot->getUserId() ?>"><img class="spot-author-avatar" src="<?= htmlspecialchars($spot->getAuthorAvatarPath() ?? '/images/default-avatar.svg', ENT_QUOTES, 'UTF-8') ?>" alt="" width="24" height="24">Dodano przez <?= htmlspecialchars($spot->getAuthorName() ?? 'Użytkownik', ENT_QUOTES, 'UTF-8') ?></a><?php endif; ?>
                     <form class="spot-bookmark-form" action="/spot/bookmark/<?= (int) $spot->getId() ?>" method="post">
                         <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="return_to" value="/explore">

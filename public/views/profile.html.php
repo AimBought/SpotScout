@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
-    <link rel="stylesheet" href="/css/style.css?v=spot-rejection-overflow-2">
+    <link rel="stylesheet" href="/css/style.css?v=profile-stats-modal-1">
     <style>
         .profile-avatar{width:8rem;height:8rem;object-fit:cover;border-radius:50%;border:4px solid var(--color-surface);box-shadow:var(--shadow-card)}
         .profile-avatar-trigger{display:block;border:0;border-radius:50%;padding:0;background:transparent;cursor:pointer;line-height:0}
@@ -21,6 +21,16 @@
         .avatar-crop-canvas:active{cursor:grabbing}
         .avatar-zoom{display:grid;gap:.4rem;margin-bottom:var(--space-2)}
         .avatar-dialog-actions{display:flex;justify-content:flex-end;gap:var(--space-1);flex-wrap:wrap}
+        .profile-stats{display:flex;flex-wrap:wrap;gap:.65rem;margin:1rem 0}
+        .profile-stat{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem .8rem;border:1px solid var(--color-border);border-radius:var(--radius-pill);background:var(--color-background);color:var(--color-muted);font-size:.92rem}
+        .profile-stat svg{width:1.1rem;height:1.1rem;flex:none;color:var(--color-brand)}
+        .profile-stat strong{color:var(--color-text);font-size:1rem}
+        .profile-bio-row{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-top:1rem}
+        .profile-bio-row p{margin:0;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+        .profile-bio-form{display:grid;gap:.65rem}
+        .profile-bio-dialog{width:min(92vw,36rem)}
+        .profile-bio-form label{font-weight:700}
+        .profile-bio-form textarea{width:100%;min-height:7rem;padding:.8rem .9rem;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-background);color:var(--color-text);font:inherit;line-height:1.5;resize:vertical}
     </style>
 </head>
 <body>
@@ -29,6 +39,7 @@
     <section class="profile-header-card" aria-labelledby="profile-name">
         <?php if ($errors !== []): ?><div class="profile-alert" role="alert"><?php foreach ($errors as $error): ?><p><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endforeach; ?></div><?php endif; ?>
         <?php if (($_GET['avatar'] ?? '') === 'updated'): ?><p class="profile-alert" role="status">Awatar został zaktualizowany.</p><?php endif; ?>
+        <?php if (($_GET['bio'] ?? '') === 'updated'): ?><p class="profile-alert" role="status">Opis profilu został zapisany.</p><?php endif; ?>
         <div class="profile-top">
             <div class="profile-identity">
                 <button class="profile-avatar-trigger" id="open-avatar-editor" type="button" aria-label="Zmień awatar użytkownika">
@@ -42,6 +53,14 @@
             </div>
         </div>
         <p class="text-muted">Kliknij zdjęcie profilowe, aby wybrać i wykadrować nowy awatar.</p>
+        <div class="profile-stats" aria-label="Statystyki profilu">
+            <span class="profile-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><strong><?= count($spots) ?></strong> dodane spoty</span>
+            <span class="profile-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v10H4V10h3Zm3 10h7.2a2 2 0 0 0 1.96-1.61l1.2-6A2 2 0 0 0 18.4 10H14l.65-3.24A2.3 2.3 0 0 0 12.4 4L10 10v10Z"/></svg><strong><?= array_sum(array_map(static fn ($spot): int => $spot->getUpvoteCount(), $spots)) ?></strong> upvotów</span>
+        </div>
+        <div class="profile-bio-row">
+            <?php if ($user->getBio() !== null && trim($user->getBio()) !== ''): ?><p><?= htmlspecialchars($user->getBio(), ENT_QUOTES, 'UTF-8') ?></p><?php else: ?><p class="text-muted">Nie dodałeś jeszcze opisu.</p><?php endif; ?>
+            <button class="btn btn-outline" id="open-bio-editor" type="button">Edytuj opis</button>
+        </div>
     </section>
     <section aria-labelledby="my-spots-heading" style="margin-bottom:var(--space-4)">
         <header class="feed-header"><div><h2 id="my-spots-heading" style="margin:0">Moje spoty (<?= count($spots) ?>)</h2><p class="text-muted">Miejsca dodane przez Ciebie.</p></div><a class="btn btn-outline" href="/spot/add">+ Dodaj spot</a></header>
@@ -51,7 +70,7 @@
                 <?php $imagePath = $spot->getPreviewImagePath() ?? '/images/featured-spot.svg'; ?>
                 <article class="spot-card"><a href="/spot/details/<?= (int) $spot->getId() ?>" class="spot-card-link">
                     <div class="spot-card-visual<?= $imagePath !== null ? ' has-image' : '' ?>"<?php if ($imagePath !== null): ?> style="background-image:url('<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>')"<?php endif; ?>><?php if ($spot->getCategory() !== null): ?><ul class="tag-list"><li class="badge"><?= htmlspecialchars($spot->getCategory(), ENT_QUOTES, 'UTF-8') ?></li></ul><?php endif; ?></div>
-                    <div class="spot-card-body"><div class="spot-card-title-row"><h3 class="spot-title-link"><?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?></h3></div><p class="spot-meta"><?php if ($spot->getLatitude() !== null && $spot->getLongitude() !== null): ?><?= htmlspecialchars(number_format($spot->getLatitude(), 5, '.', '') . ', ' . number_format($spot->getLongitude(), 5, '.', ''), ENT_QUOTES, 'UTF-8') ?><?php else: ?>Brak współrzędnych<?php endif; ?></p><footer class="spot-card-footer"><span class="light-tag">Zobacz szczegóły</span><span class="details-link">Otwórz →</span></footer></div>
+                    <div class="spot-card-body"><div class="spot-card-title-row"><h3 class="spot-title-link"><?= htmlspecialchars($spot->getTitle(), ENT_QUOTES, 'UTF-8') ?></h3></div><p class="spot-meta"><?php if ($spot->getLatitude() !== null && $spot->getLongitude() !== null): ?><?= htmlspecialchars(number_format($spot->getLatitude(), 5, '.', '') . ', ' . number_format($spot->getLongitude(), 5, '.', ''), ENT_QUOTES, 'UTF-8') ?><?php else: ?>Brak współrzędnych<?php endif; ?></p><footer class="spot-card-footer"><span class="light-tag">Zobacz szczegóły</span><span class="details-link">👍 <?= $spot->getUpvoteCount() ?> · Otwórz →</span></footer></div>
                 </a>
                 <?php if ($spot->getStatus() === 'pending'): ?><p class="spot-status-badge status-pending">Oczekuje na weryfikację</p><?php elseif ($spot->getStatus() === 'rejected'): ?><p class="spot-status-badge status-rejected">Odrzucony</p><?php elseif ($spot->getStatus() === 'approved'): ?><p class="spot-status-badge status-approved">Zatwierdzony</p><?php endif; ?>
                 <?php if ($spot->getStatus() === 'rejected' && $spot->getRejectionReason() !== null): ?><p class="spot-rejection-reason profile-spot-reason"><strong>Powód:</strong> <?= htmlspecialchars($spot->getRejectionReason(), ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
@@ -95,10 +114,25 @@
         <div class="avatar-dialog-actions"><button type="button" class="btn btn-outline" id="cancel-avatar-edit">Anuluj</button><button type="submit" class="btn btn-primary" id="save-avatar" disabled>Zatwierdź zdjęcie</button></div>
     </form>
 </dialog>
+<dialog class="avatar-dialog profile-bio-dialog" id="bio-dialog" aria-labelledby="bio-dialog-title">
+    <form class="profile-bio-form" action="/profile/bio" method="post">
+        <input type="hidden" name="_csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+        <h2 id="bio-dialog-title">Edytuj opis</h2>
+        <label for="profile-bio">O mnie <span class="text-muted">(maksymalnie 500 znaków)</span></label>
+        <textarea id="profile-bio" name="bio" maxlength="500" placeholder="Napisz kilka słów o sobie, fotografii lub ulubionych lokacjach."><?= htmlspecialchars($user->getBio() ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+        <div class="avatar-dialog-actions"><button class="btn btn-outline" type="button" id="cancel-bio-edit">Anuluj</button><button class="btn btn-primary" type="submit">Zapisz opis</button></div>
+    </form>
+</dialog>
 <nav class="mobile-bottom-nav" aria-label="Nawigacja mobilna"><a href="/explore" class="mobile-nav-item">Explore</a><a href="/spot/add" class="mobile-nav-item mobile-nav-add">+ Dodaj</a><a href="/profile" class="mobile-nav-item is-active">Profil</a></nav>
 <footer class="page site-footer"><p>&copy; 2026 SpotScout.</p></footer>
 <script src="/js/theme.js" defer></script>
 <script>
+const bioDialog = document.getElementById('bio-dialog');
+document.getElementById('open-bio-editor').addEventListener('click', () => bioDialog.showModal());
+document.getElementById('cancel-bio-edit').addEventListener('click', () => bioDialog.close());
+bioDialog.addEventListener('click', event => { if (event.target === bioDialog) bioDialog.close(); });
+<?php if ($errors !== []): ?>bioDialog.showModal();<?php endif; ?>
+
 const avatarDialog = document.getElementById('avatar-dialog');
 const avatarFileInput = document.getElementById('avatar-file');
 const avatarCanvas = document.getElementById('avatar-crop-canvas');

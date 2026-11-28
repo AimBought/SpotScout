@@ -1429,6 +1429,8 @@ body.split-screen-body > .site-header + .split-screen .split-image {
 .page .pending-contribution-item { height: 100%; align-content: start; }
 .page .pending-contribution-item .moderation-actions { display: flex; flex-wrap: wrap; }
 .page .report-card > form:not(.report-actions) .btn { width: fit-content; }
+.spot-author a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 45%, transparent); text-underline-offset: .16em; }
+.spot-author a:hover { color: #fff; }
 @media (max-width: 48rem) {
   .page .moderation-actions { grid-template-columns: minmax(0, 1fr); }
   .page .moderation-actions .moderation-reject-form { width: 100%; }

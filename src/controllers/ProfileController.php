@@ -26,14 +26,62 @@ final class ProfileController extends AppController
             $this->redirect('/login');
         }
 
+        $errors = is_array($_SESSION['profile_errors'] ?? null) ? $_SESSION['profile_errors'] : [];
+        unset($_SESSION['profile_errors']);
+
         $this->render('profile', [
             'pageTitle' => $user->getName() . ' | SpotScout',
             'user' => $user,
             'spots' => $this->spots->findByUserId($userId),
             'bookmarkedSpots' => $this->spots->findBookmarkedByUserId($userId),
             'csrfToken' => $this->csrfToken(),
-            'errors' => [],
+            'errors' => $errors,
         ]);
+    }
+
+    public function publicProfile(int $id): void
+    {
+        if ($id < 1) {
+            http_response_code(404);
+            $this->render('not-found', ['pageTitle' => 'Nie znaleziono użytkownika | SpotScout']);
+            return;
+        }
+
+        if (isset($_SESSION['user_id']) && (int) $_SESSION['user_id'] === $id) {
+            $this->redirect('/profile');
+        }
+
+        $user = $this->users->findById($id);
+        if ($user === null) {
+            http_response_code(404);
+            $this->render('not-found', ['pageTitle' => 'Nie znaleziono użytkownika | SpotScout']);
+            return;
+        }
+
+        $this->render('public-profile', [
+            'pageTitle' => $user->getName() . ' | Profil SpotScout',
+            'user' => $user,
+            'spots' => $this->spots->findApprovedByUserId($id),
+        ]);
+    }
+
+    public function updateBio(): void
+    {
+        $this->requireLogin();
+        $token = is_string($_POST['_csrf_token'] ?? null) ? $_POST['_csrf_token'] : '';
+        if (!$this->isPost() || !$this->isCsrfTokenValid($token)) {
+            $_SESSION['profile_errors'] = ['Formularz wygasł lub token bezpieczeństwa jest nieprawidłowy.'];
+            $this->redirect('/profile');
+        }
+
+        $bio = trim(is_string($_POST['bio'] ?? null) ? $_POST['bio'] : '');
+        if (mb_strlen($bio) > 500) {
+            $_SESSION['profile_errors'] = ['Opis może mieć maksymalnie 500 znaków.'];
+            $this->redirect('/profile');
+        }
+
+        $this->users->updateBio((int) $_SESSION['user_id'], $bio === '' ? null : $bio);
+        $this->redirect('/profile?bio=updated');
     }
 
     public function uploadAvatar(): void

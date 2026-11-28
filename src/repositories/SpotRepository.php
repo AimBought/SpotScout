@@ -60,7 +60,27 @@ final class SpotRepository
         $statement = $this->database->prepare(
             'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, '
             . 'COALESCE(s.image_path, (SELECT si.image_path FROM spot_images si WHERE si.spot_id = s.id AND si.status = \'approved\' ORDER BY si.created_at ASC, si.id ASC LIMIT 1)) AS preview_image_path, '
-            . 's.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id WHERE s.user_id = :user_id ORDER BY s.created_at DESC'
+            . 'COALESCE(vote_counts.upvote_count, 0) AS upvote_count, '
+            . 's.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path FROM spots s LEFT JOIN users u ON u.id = s.user_id '
+            . 'LEFT JOIN (SELECT spot_id, COUNT(*) AS upvote_count FROM spot_upvotes GROUP BY spot_id) vote_counts ON vote_counts.spot_id = s.id '
+            . 'WHERE s.user_id = :user_id ORDER BY s.created_at DESC'
+        );
+        $statement->execute(['user_id' => $userId]);
+
+        return array_map(fn (array $row): Spot => $this->mapRowToSpot($row), $statement->fetchAll());
+    }
+
+    /** @return array<int, Spot> */
+    public function findApprovedByUserId(int $userId): array
+    {
+        $statement = $this->database->prepare(
+            'SELECT s.id, s.title, s.description, s.status, s.rejection_reason, s.created_at, s.updated_at, s.latitude, s.longitude, s.category, s.image_path, '
+            . 'COALESCE(s.image_path, (SELECT si.image_path FROM spot_images si WHERE si.spot_id = s.id AND si.status = \'approved\' ORDER BY si.created_at ASC, si.id ASC LIMIT 1)) AS preview_image_path, '
+            . 'COALESCE(vote_counts.upvote_count, 0) AS upvote_count, '
+            . 's.user_id, u.name AS author_name, u.avatar_path AS author_avatar_path '
+            . 'FROM spots s LEFT JOIN users u ON u.id = s.user_id '
+            . 'LEFT JOIN (SELECT spot_id, COUNT(*) AS upvote_count FROM spot_upvotes GROUP BY spot_id) vote_counts ON vote_counts.spot_id = s.id '
+            . 'WHERE s.user_id = :user_id AND s.status = \'approved\' ORDER BY s.created_at DESC, s.id DESC'
         );
         $statement->execute(['user_id' => $userId]);
 
