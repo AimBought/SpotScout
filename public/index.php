@@ -64,6 +64,8 @@ $routing->post('/spot/contribute/{id}', SpotController::class, 'contribute');
 $routing->post('/spot/image/delete/{id}', SpotController::class, 'deleteImage');
 $routing->post('/spot/cover/delete/{id}', SpotController::class, 'deleteCoverImage');
 $routing->get('/profile', $profileController, 'index');
+$routing->get('/users/{id}', $profileController, 'publicProfile');
+$routing->post('/profile/bio', $profileController, 'updateBio');
 $routing->post('/profile/avatar', $profileController, 'uploadAvatar');
 $routing->get('/admin', $adminController, 'index');
 $routing->get('/admin/moderator', $adminController, 'moderatorTab');

@@ -12,6 +12,7 @@ final class User
         private string $email,
         private ?string $avatarPath = null,
         private string $role = 'user',
+        private ?string $bio = null,
     ) {
     }
 
@@ -20,5 +21,7 @@ final class User
     public function getEmail(): string { return $this->email; }
     public function getAvatarPath(): ?string { return $this->avatarPath; }
     public function getRole(): string { return $this->role; }
+    public function getBio(): ?string { return $this->bio; }
     public function setAvatarPath(?string $avatarPath): void { $this->avatarPath = $avatarPath; }
+    public function setBio(?string $bio): void { $this->bio = $bio; }
 }
